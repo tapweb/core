@@ -124,7 +124,7 @@ class Fuel
 		static::$_paths = array(APPPATH, COREPATH);
 
 		// Is Fuel running on the command line?
-		static::$is_cli = (bool) defined('STDIN');
+		static::$is_cli = (bool) (defined('STDIN') or php_sapi_name() != "cli");
 
 		\Config::load($config);
 
