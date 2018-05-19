@@ -155,8 +155,11 @@ class Autoloader
 	 *
 	 * @return	void
 	 */
-	public static function register()
+	public static function register($composer = null)
 	{
+		// store the composer instance if passed
+		$composer and static::$composer = $composer;
+
 		// define the corepath
 		define('COREPATH', dirname(__DIR__).DS);
 
@@ -169,9 +172,8 @@ class Autoloader
 	 *
 	 * @return	ClassLoader
 	 */
-	public static function composer($composer = null)
+	public static function composer()
 	{
-		is_object($composer) and static::$composer = $composer;
 		return static::$composer;
 	}
 
