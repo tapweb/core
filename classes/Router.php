@@ -20,9 +20,22 @@ class Router
 	public static $routes = array();
 
 	/**
-	 * Defines the controller class prefix. This allows you to namespace controllers
+	 * Defines the available controller class prefixes
 	 */
 	protected static $prefixes = array('\\Controller_', '\\Controller\\');
+
+	/**
+	 * The controller class prefix used. This allows you to namespace controllers
+	 */
+	protected static $prefix = '';
+
+	/**
+	 * Fetch the controller prefix to be used, if defined
+	 */
+	public static function _init()
+	{
+		static::$prefix = ltrim(\Config::get('controller_prefix'), '\\');
+	}
 
 	/**
 	 * Add one or multiple routes
@@ -265,11 +278,13 @@ class Router
 	{
 		$temp_segments = $segments;
 
+		$prefixes = static::$prefix ? array(static::$prefix) : static::$prefixes;
+
 		foreach (array_reverse($segments, true) as $key => $segment)
 		{
 			// determine which classes to check. First, all underscores, or all namespaced
 			$classes = array();
-			foreach (static::$prefixes as $prefix)
+			foreach ($prefixes as $prefix)
 			{
 				$classes[]  = $namespace.$prefix.\Inflector::words_to_upper(implode(substr($prefix, -1, 1), $temp_segments), substr($prefix, -1, 1));
 			}
@@ -293,7 +308,7 @@ class Router
 		// Fall back for default module controllers
 		if ($module)
 		{
-			foreach (static::$prefixes as $prefix)
+			foreach ($prefixes as $prefix)
 			{
 				$class = $namespace.$prefix.ucfirst($module);
 				if (static::check_class($class))
