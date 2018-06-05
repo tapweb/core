@@ -206,11 +206,19 @@ class Str
 				break;
 
 			case 'unique':
-				return md5(uniqid(mt_rand()));
+				return hash('md5', static::random('alnum', 256));
 				break;
 
 			case 'sha1' :
-				return sha1(uniqid(mt_rand(), true));
+				return hash('sha1', static::random('alnum', 256));
+				break;
+
+			case 'hash' :
+				if ( ! in_array($type, hash_algos()))
+				{
+					throw new \FuelException('Unable to generate random string, hash algorithm "'.$type.'" not available!');
+				}
+				return hash($type, static::random('alnum', 256));
 				break;
 
 			case 'uuid':
