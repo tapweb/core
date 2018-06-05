@@ -14,7 +14,7 @@
 /**
  * Register all the error/shutdown handlers
  */
-/*register_shutdown_function(function ()
+register_shutdown_function(function ()
 {
 	// reset the autoloader
 	\Autoloader::_reset();
@@ -85,4 +85,3 @@ set_error_handler(function ($severity, $message, $filepath, $line)
 
 	return \Errorhandler::error_handler($severity, $message, $filepath, $line);
 });
-*/
