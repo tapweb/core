@@ -22,7 +22,7 @@ class Router
 	/**
 	 * Defines the available controller class prefixes
 	 */
-	protected static $prefixes = array('\\Controller_', '\\Controller\\');
+	protected static $prefixes = array('Controller_', 'Controller\\');
 
 	/**
 	 * The controller class prefix used. This allows you to namespace controllers
