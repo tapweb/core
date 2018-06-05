@@ -227,7 +227,7 @@ class Log
 		}
 
 		// if profiling is active log the message to the profile
-		if (\Config::get('profiling'))
+		if (\Fuel::$profiling)
 		{
 			empty($context) ? \Console::log($msg) : \Console::log($context.' - '.$msg);
 		}
