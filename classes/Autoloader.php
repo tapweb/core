@@ -214,8 +214,8 @@ class Autoloader
 		}
 
 		$loaded = false;
-		$class = ltrim($class, '\\');
-		$pos = strripos($class, '\\');
+		$class = trim($class, '\\');
+		$pos = strrpos($class, '\\');
 
 		if (empty(static::$auto_initialize))
 		{
