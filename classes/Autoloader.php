@@ -230,7 +230,7 @@ class Autoloader
 			{
 				if ($loaded = static::load_class($file, $class))
 				{
-					logger(\Fuel::L_DEBUG, "AUTOLOADER: Class $class in file $file found in add_class() list!");
+					logger(\Fuel::L_DEBUG, "AUTOLOADER: Class $class in file $file found in add_class() list");
 				}
 			}
 		}
@@ -425,7 +425,7 @@ class Autoloader
 			if (method_exists($class, '_init') and is_callable($class.'::_init'))
 			{
 				call_user_func($class.'::_init');
-				logger(\Fuel::L_DEBUG, "AUTOLOADER: Class $class has a static init() method, this is not PSR-4 compatible!");
+				logger(\Fuel::L_WARNING, "AUTOLOADER: Class $class has a static init() method, this is not PSR-4 compatible!");
 			}
 		}
 	}
