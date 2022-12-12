@@ -86,7 +86,6 @@ class Cookie
 		{
 			return false;
 		}
-
 		$value = \Fuel::value($value);
 
 		// use the class defaults for the other parameters if not provided
@@ -99,12 +98,15 @@ class Cookie
 
 		// add the current time so we have an offset
 		$expiration = $expiration > 0 ? $expiration + time() : 0;
-		
+
+		// Avoid php 8.1 errors with null domain
+		is_null($domain) and $domain = '';
+
 		if (is_null($same_site))
 		{
 		    return setcookie($name, $value, $expiration, $path, $domain, $secure, $http_only);
 		}
-		
+
 		if (PHP_VERSION_ID < 70300)
 		{
 		    return setcookie($name, $value, $expiration, "{$path}; samesite={$same_site}", $domain, $secure, $http_only);
@@ -138,25 +140,27 @@ class Cookie
 	{
 		// Remove the cookie
 		unset($_COOKIE[$name]);
-		
+
 		if (is_null($same_site))
 		{
-		    return static::set($name, null, -86400, $path, $domain, $secure, $http_only);
+		    return static::set($name, "", -86400, $path, $domain, $secure, $http_only);
 		}
+
+		// use the class defaults for the other parameters if not provided
+		is_null($path) and $path = static::$config['path'];
+		is_null($domain) and $domain = static::$config['domain'];
+		is_null($secure) and $secure = static::$config['secure'];
+		is_null($http_only) and $http_only = static::$config['http_only'];
+
+		// Avoid php 8.1 errors with null domain
+		is_null($domain) and $domain = '';
 
 		// Nullify the cookie and make it expire
 		if (PHP_VERSION_ID < 70300)
 		{
-		    return setcookie($name, null, -86400, "{$path}; samesite={$same_site}", $domain, $secure, $http_only);
+		    return setcookie($name, "", -86400, "{$path}; samesite={$same_site}", $domain, $secure, $http_only);
 		}
 
-		return setcookie($name, null, array(
-		    'expires' => -86400,
-		    'path' => $path,
-		    'domain' => $domain,
-		    'samesite' => $same_site,
-		    'secure' => $secure,
-		    'httponly' => $http_only,
-		));
+		return setcookie($name, "", array('expires' => -86400, 'path' => $path, 'domain' => $domain, 'samesite' => $same_site, 'secure' => $secure,'httponly' => $http_only));
 	}
 }
