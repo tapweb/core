@@ -976,7 +976,7 @@ class Model_Crud extends \Model implements \Iterator, \ArrayAccess, \Serializabl
 		$data['_is_new'] = $this->_is_new;
 		$data['_is_frozen'] = $this->_is_frozen;
 
-		return serialize($data);
+		return (array)serialize($data);
 	}
 
 	/**
@@ -993,7 +993,7 @@ class Model_Crud extends \Model implements \Iterator, \ArrayAccess, \Serializabl
 
 	public function unserialize($data)
 	{
-		$data = unserialize($data);
+        $data = unserialize(implode(" ",$data ?? ""));
 
 		if (isset($data['_is_new']))
 		{
