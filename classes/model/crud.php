@@ -993,7 +993,7 @@ class Model_Crud extends \Model implements \Iterator, \ArrayAccess, \Serializabl
 
 	public function unserialize($data)
 	{
-        $data = unserialize(implode(" ",$data ?? ""));
+        $data = unserialize(implode(" ", $data ?? ""));
 
 		if (isset($data['_is_new']))
 		{
