@@ -994,7 +994,6 @@ class Model_Crud extends \Model implements \Iterator, \ArrayAccess, \Serializabl
 	public function unserialize($data)
 	{
         $data = unserialize(implode(" ", $data ?? ""));
-
 		if (isset($data['_is_new']))
 		{
 			$this->is_new = $data['_is_new'];
