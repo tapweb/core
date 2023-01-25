@@ -174,14 +174,14 @@ class Input_Instance
 		}
 
 		// Remove the base URL from the URI
-		$base_url = parse_url(\Config::get('base_url'), PHP_URL_PATH);
+		$base_url = parse_url((string) \Config::get('base_url', ''), PHP_URL_PATH);
 		if ($uri !== '' and $base_url !== '' and strncmp($uri, $base_url, strlen($base_url)) === 0)
 		{
 			$uri = substr($uri, strlen($base_url) - 1);
 		}
 
 		// If we are using an index file (not mod_rewrite) then remove it
-		$index_file = \Config::get('index_file');
+		$index_file = \Config::get('index_file', false);
 		if ($index_file and strncmp($uri, $index_file, strlen($index_file)) === 0)
 		{
 			$uri = substr($uri, strlen($index_file));
@@ -196,7 +196,7 @@ class Input_Instance
 
 		// in case of incorrect rewrites, we may need to cleanup and
 		// recreate the QUERY_STRING and $_GET
-		if (strpos($uri, '?') !== false)
+		if (strpos($uri, '?') !== false or array_key_exists($uri, $_GET))
 		{
 			// log this issue
 			\Log::write(\Fuel::L_DEBUG, 'Your rewrite rules are incorrect, change "index.php?/$1 [QSA,L]" to "index.php/$1 [L]"!');
@@ -330,7 +330,7 @@ class Input_Instance
 			// get php raw input
 			$this->raw_input = file_get_contents('php://input');
 		}
-		
+
 		return $this->raw_input;
 	}
 

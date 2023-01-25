@@ -302,7 +302,8 @@ abstract class Database_Result implements \Countable, \Iterator, \Sanitization
 	 *
 	 * @return  integer
 	 */
-	public function count()
+	#[\ReturnTypeWillChange]
+	public function count()/*: int*/
 	{
 		return $this->_total_rows;
 	}
@@ -316,7 +317,8 @@ abstract class Database_Result implements \Countable, \Iterator, \Sanitization
 	 *
 	 * @return  mixed
 	 */
-	public function current()
+	#[\ReturnTypeWillChange]
+	public function current()/*: mixed*/
 	{
 		return $this->_row;
 	}
@@ -326,7 +328,8 @@ abstract class Database_Result implements \Countable, \Iterator, \Sanitization
 	 *
 	 * @return  integer
 	 */
-	public function key()
+	#[\ReturnTypeWillChange]
+	public function key()/*: mixed*/
 	{
 		return $this->_current_row;
 	}
@@ -334,7 +337,8 @@ abstract class Database_Result implements \Countable, \Iterator, \Sanitization
 	/**
 	 * Implements [Iterator::next], moves to the next row.
 	 */
-	public function next()
+	#[\ReturnTypeWillChange]
+	public function next()/*: void*/
 	{
 		++$this->_current_row;
 	}
@@ -342,7 +346,8 @@ abstract class Database_Result implements \Countable, \Iterator, \Sanitization
 	/**
 	 * Implements [Iterator::rewind], sets the current row to -1.
 	 */
-	public function rewind()
+	#[\ReturnTypeWillChange]
+	public function rewind()/*: void*/
 	{
 		// first row is zero, not one!
 		$this->_current_row = -1;
@@ -356,7 +361,8 @@ abstract class Database_Result implements \Countable, \Iterator, \Sanitization
 	 *
 	 * @return  boolean
 	 */
-	public function valid()
+	#[\ReturnTypeWillChange]
+	public function valid()/*: bool*/
 	{
 		return $this->_current_row >= 0 and $this->_current_row < $this->_total_rows;
 	}

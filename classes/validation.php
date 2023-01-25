@@ -861,7 +861,7 @@ class Validation
 
 		foreach ($emails as $e)
 		{
-			if ( ! filter_var(trim($e), FILTER_VALIDATE_EMAIL))
+			if ( ! is_string($e) or ! filter_var(trim($e), FILTER_VALIDATE_EMAIL))
 			{
 				return false;
 			}
@@ -887,17 +887,13 @@ class Validation
 	 * @param   string  ipv4|ipv6
 	 * @return  bool
 	 */
-	public function _validation_valid_ip($val, $flag = null)
+	public function _validation_valid_ip($val, $flag = '')
 	{
-		switch (strtolower($flag))
-		{
-			case 'ipv4':
-				$flag = FILTER_FLAG_IPV4;
-				break;
-			case 'ipv6':
-				$flag = FILTER_FLAG_IPV6;
-				break;
-		}
+        $flag = match (strtolower($flag)) {
+            'ipv4' => FILTER_FLAG_IPV4,
+            'ipv6' => FILTER_FLAG_IPV6,
+            default => FILTER_DEFAULT,
+        };
 
 		return $this->_empty($val) || filter_var($val, FILTER_VALIDATE_IP, $flag);
 	}

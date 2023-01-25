@@ -261,12 +261,12 @@ class Redis_Db
 		{
 			// error reply
 			case '-':
-				throw new \RedisException(trim(substr($reply, 1)));
+				throw new \RedisException(substr($reply, 1));
 				break;
 
 			// inline reply
 			case '+':
-				$response = substr(trim($reply), 1);
+				$response = substr($reply, 1);
 				if ($response === 'OK')
 				{
 					$response = true;
@@ -321,7 +321,7 @@ class Redis_Db
 
 			// integer reply
 			case ':':
-				$response = intval(substr(trim($reply), 1));
+				$response = intval(substr($reply, 1));
 				break;
 
 			default:

@@ -52,6 +52,14 @@ if ( ! function_exists('call_fuel_func_array'))
 			is_string($callback) and $callback = ltrim($callback, '\\');
 		}
 
+        // TODO refactor
+        // convert null to empty string if callback function in deprecated functions parameters
+        if (is_string($callback) && in_array($callback, ['trim'])) {
+            $args = array_map(function ($item) {
+                return $item ?? '';
+            }, $args);
+        }
+
 		return $callback(...$args);
 	}
 }
