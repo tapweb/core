@@ -6,7 +6,7 @@
  * @version    1.9-dev
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010 - 2019 Fuel Development Team
+ * @copyright  2010-2025 Fuel Development Team
  * @link       https://fuelphp.com
  */
 
@@ -335,7 +335,31 @@ class Finder
 
 		// If a filename contains a :: then it is trying to be found in a namespace.
 		// This is sometimes used to load a view from a non-loaded module.
-		if ($pos = strripos($file, '::'))
+		$pos = strripos($file, '::');
+
+		// regular name
+		if ($pos === false)
+		{
+			$paths = $this->paths;
+
+			// get extra information of the active request
+			if (class_exists('Request', false) and ($request = \Request::active()))
+			{
+				$request->module and $cache_id .= $request->module;
+				$paths = array_merge($request->get_paths(), $paths);
+			}
+		}
+
+		// :: without a namespace, load from the app namespace only
+		elseif ($pos === 0)
+		{
+			$paths = $this->paths;
+
+			$file = substr($file, 2);
+		}
+
+		// namespaced file
+		else
 		{
 			// get the namespace path
 			if ($path = \Autoloader::namespace_path('\\'.ucfirst(substr($file, 0, $pos))))
@@ -348,16 +372,9 @@ class Finder
 				// strip the namespace from the filename
 				$file = substr($file, $pos + 2);
 			}
-		}
-		else
-		{
-			$paths = $this->paths;
-
-			// get extra information of the active request
-			if (class_exists('Request', false) and ($request = \Request::active()))
+			else
 			{
-				$request->module and $cache_id .= $request->module;
-				$paths = array_merge($request->get_paths(), $paths);
+				$file = substr($file, 2);
 			}
 		}
 
@@ -522,7 +539,18 @@ class Finder
 			mkdir($dir, \Config::get('file.chmod.folders', 0777), true);
 
 			// Set permissions (must be manually set to fix umask issues)
-			chmod($dir, \Config::get('file.chmod.folders', 0777));
+			try
+			{
+				chmod($dir, \Config::get('file.chmod.folders', 0777));
+			}
+			catch (\PhpErrorException $e)
+			{
+				// if we get something else then a chmod error, bail out
+				if (substr($e->getMessage(), 0, 8) !== 'chmod():')
+				{
+					throw new $e;
+				}
+			}
 		}
 
 		// Force the data to be a string

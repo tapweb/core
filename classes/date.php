@@ -6,7 +6,7 @@
  * @version    1.9-dev
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010 - 2019 Fuel Development Team
+ * @copyright  2010-2025 Fuel Development Team
  * @link       https://fuelphp.com
  */
 
@@ -62,6 +62,7 @@ class Date
 		'%T'  => 'G:i:s', 		// Example: 21:34:17 for 09:34:17 PM
 		'%X'  => 'G:i:s', 		// Preferred time representation based on locale, without the date, Example: 03:59:16 or 15:59:16
 		'%Z'  => 'T', 			// The time zone abbreviation. Example: EST for Eastern Time
+		'%z'  => 'O',
 		'%c'  => 'Y-m-d H:i:s', // Preferred date and time stamp based on locale
 		'%D'  => 'm/d/y',		// Example: 02/05/09 for February 5, 2009
 		'%F'  => 'Y-m-d',		// Example: 2009-02-05 for February 5, 2009
@@ -101,6 +102,8 @@ class Date
 
 	public static function _init()
 	{
+		\Config::load('date', 'date');
+
 		static::$server_gmt_offset	= \Config::get('server_gmt_offset', 0);
 
 		static::$display_timezone = \Config::get('default_timezone') ?: date_default_timezone_get();
@@ -111,11 +114,12 @@ class Date
 	 *
 	 * @param   int     $timestamp  UNIX timestamp from current server
 	 * @param   string  $timezone   valid PHP timezone from www.php.net/timezones
+	 * @param   string  $pattern    valid strftime pattern or date config key
 	 * @return  Date
 	 */
-	public static function forge($timestamp = null, $timezone = null)
+	public static function forge($timestamp = null, $timezone = null, $pattern = null)
 	{
-		return new static($timestamp, $timezone);
+		return new static($timestamp, $timezone, $pattern);
 	}
 
 	/**
@@ -163,7 +167,7 @@ class Date
 		}
 
 		// make sure we don't go before the epoch, as that causes weird things to happen
-		$time['tm_year'] <= 0 and $time['tm_year'] = 100;
+		$time['tm_year'] < 0 and $time['tm_year'] = 100;
 
 		// convert it into a timestamp
 		$timestamp = mktime($time['tm_hour'], $time['tm_min'], $time['tm_sec'],
@@ -174,7 +178,23 @@ class Date
 			throw new \OutOfBoundsException('Input was invalid.'.(PHP_INT_SIZE == 4 ? ' A 32-bit system only supports dates between 1901 and 2038.' : ''));
 		}
 
-		return static::forge($timestamp);
+		// by default, strptime() doesn't support timezones, but we
+		// do if pne was present in the format (%z or %Z for example)
+		if (array_key_exists('tm_zone', $time))
+		{
+			// and calculate the offset correction
+			$this_tz = timezone_open(date_default_timezone_get());
+			$utc_dt = date_create("now", timezone_open("UTC"));
+			$offset = timezone_offset_get($this_tz, $utc_dt);
+
+			// correct the timestamo
+			$timestamp = $timestamp - $time['tm_zone'] + $offset;
+		}
+
+		// create the date object
+		$date = static::forge($timestamp, date_default_timezone_get());
+
+		return $date;
 	}
 
 	/**
@@ -262,10 +282,27 @@ class Date
 		{
 			return '';
 		}
+		elseif ($timestamp instanceOf static)
+		{
+			$timestamp = $timestamp->get_timestamp();
+		}
+		elseif ( ! is_numeric($timestamp))
+		{
+			$timestamp = static::create_from_string($timestamp)->get_timestamp();
+		}
 
-		! is_numeric($timestamp) and $timestamp = static::create_from_string($timestamp)->get_timestamp();
-
-		$from_timestamp == null and $from_timestamp = time();
+		if ($from_timestamp === null)
+		{
+			$from_timestamp = time();
+		}
+		elseif ($from_timestamp instanceOf static)
+		{
+			$from_timestamp = $from_timestamp->get_timestamp();
+		}
+		elseif ( ! is_numeric($from_timestamp))
+		{
+			$from_timestamp = static::create_from_string($from_timestamp)->get_timestamp();
+		}
 
 		\Lang::load('date', true);
 
@@ -318,9 +355,13 @@ class Date
 
 	public static function strptime($input, $format)
 	{
-		if (version_compare(PHP_VERSION, '8.1.0', '<'))
+		if (function_exists('strptime') and version_compare(PHP_VERSION, '8.1.0', '<'))
 		{
-			return strptime($input, $format);
+			// we support timezones, the original strptime() doesn't.
+			if (strpos($format, '%z') === false and strpos($format, '%Z') === false)
+			{
+				return strptime($input, $format);
+			}
 		}
 
 		// convert the format string from glibc to date format (where possible)
@@ -338,14 +379,28 @@ class Date
 		// parse succesful?
 		if (is_array($parsed) and empty($parsed['errors']))
 		{
-			return array(
-				'tm_year' => $parsed['year'] - 1900,
-				'tm_mon'  => $parsed['month'] - 1,
-				'tm_mday' => $parsed['day'],
-				'tm_hour' => $parsed['hour'] ?: 0,
-				'tm_min'  => $parsed['minute'] ?: 0,
-				'tm_sec'  => $parsed['second'] ?: 0,
+			// we need a timestamp to calculate wday and yday
+			$timestamp = mktime($parsed['hour'], $parsed['minute'], $parsed['second'],
+							$parsed['month'], $parsed['day'], $parsed['year']);
+
+			$result = array(
+				'tm_sec'   => $parsed['second'] ?: 0,
+				'tm_min'   => $parsed['minute'] ?: 0,
+				'tm_hour'  => $parsed['hour'] ?: 0,
+				'tm_mday'  => $parsed['day'],
+				'tm_mon'   => $parsed['month'] - 1,
+				'tm_year'  => $parsed['year'] - 1900,
+				'tm_wday'  => $timestamp ? date('N', $timestamp) : 0,
+				'tm_yday'  => $timestamp ? date('z', $timestamp) : 0,
+				'unparsed' => '',
 			);
+
+			if ( ! empty($parsed['is_localtime']))
+			{
+				$result['tm_zone'] = isset($parsed['zone']) ? $parsed['zone'] : 0;
+			}
+
+			return $result;
 		}
 		else
 		{
@@ -366,13 +421,20 @@ class Date
 				return false;
 			}
 
+			// we need a timestamp to calculate wday and yday
+			$timestamp = mktime($result['H'], $result['M'], $result['S'],
+							($result['m'] ? $result['m'] - 1 : 0), $result['d'], ($result['Y'] > 1900 ? $result['Y'] - 1900 : $result['Y']));
+
 			return array(
-				"tm_sec"  => isset($result['S']) ? (int) $result['S'] : 0,
-				"tm_min"  => isset($result['M']) ? (int) $result['M'] : 0,
-				"tm_hour" => isset($result['H']) ? (int) $result['H'] : 0,
-				"tm_mday" => isset($result['d']) ? (int) $result['d'] : 0,
-				"tm_mon"  => isset($result['m']) ? ($result['m'] ? $result['m'] - 1 : 0) : 0,
-				"tm_year" => isset($result['Y']) ? ($result['Y'] > 1900 ? $result['Y'] - 1900 : 0) : 0,
+				"tm_sec"   => isset($result['S']) ? (int) $result['S'] : 0,
+				"tm_min"   => isset($result['M']) ? (int) $result['M'] : 0,
+				"tm_hour"  => isset($result['H']) ? (int) $result['H'] : 0,
+				"tm_mday"  => isset($result['d']) ? (int) $result['d'] : 0,
+				"tm_mon"   => isset($result['m']) ? ($result['m'] ? $result['m'] - 1 : 0) : 0,
+				"tm_year"  => isset($result['Y']) ? ($result['Y'] > 1900 ? $result['Y'] - 1900 : $result['Y']) : 0,
+				'tm_wday'  => $timestamp ? date('N', $timestamp) : 0,
+				'tm_yday'  => $timestamp ? date('z', $timestamp) : 0,
+				'unparsed' => '',
 			);
 		}
 	}
@@ -385,13 +447,8 @@ class Date
 	 * @return	string
 	 * @thanks  https://gist.github.com/bohwaz/42fc223031e2b2dd2585aab159a20f30
  	 */
-	public static function strftime($format, $timestamp)
+	public static function strftime($format, $timestamp = null)
 	{
-		if (version_compare(PHP_VERSION, '8.1.0', '<'))
-		{
-			return strftime($format, $timestamp);
-		}
-
 		if (is_null($timestamp))
 		{
 			$timestamp = new \DateTime;
@@ -436,6 +493,13 @@ class Date
 				$date_type = \IntlDateFormatter::LONG;
 				$time_type = \IntlDateFormatter::SHORT;
 			}
+			// %Q = Preferred date and time stamp based on locale
+			// Example: Tue Feb 5 00:45:10 2009 for February 5, 2009 at 12:45:10 AM
+			elseif ($format == '%Q')
+			{
+				$date_type = \IntlDateFormatter::LONG;
+				$time_type = \IntlDateFormatter::NONE;
+			}
 			// %x = Preferred date representation based on locale, without the time
 			// Example: 02/05/09 for February 5, 2009
 			elseif ($format == '%x')
@@ -454,7 +518,7 @@ class Date
 				$pattern = $intl_formats[$format];
 			}
 
-			return (new \IntlDateFormatter(null, $date_type, $time_type, $tz, null, $pattern))->format($timestamp);
+			return (new \IntlDateFormatter(setlocale(LC_TIME,0), $date_type, $time_type, $tz, null, $pattern))->format($timestamp);
 		};
 
 		// Same order as https://www.php.net/manual/en/function.strftime.php
@@ -528,6 +592,7 @@ class Date
 
 			// Time and Date Stamps
 			'%c' => $intl_formatter,
+			'%Q' => $intl_formatter,
 			'%D' => 'm/d/Y',
 			'%F' => 'Y-m-d',
 			'%s' => 'U',
@@ -605,13 +670,27 @@ class Date
 	 */
 	protected $timezone;
 
-	public function __construct($timestamp = null, $timezone = null)
+	/**
+	 * @var  string  default format pattern
+	 */
+	protected $pattern = 'local';
+
+	/**
+	 * Create Date object from timestamp, timezone is optional
+	 *
+	 * @param   int     $timestamp  UNIX timestamp from current server
+	 * @param   string  $timezone   valid PHP timezone from www.php.net/timezones
+	 * @param   string  $pattern    valid strftime pattern or date config key
+	 */
+	public function __construct($timestamp = null, $timezone = null, $pattern = null)
 	{
 		is_null($timestamp) and $timestamp = time() + static::$server_gmt_offset;
-		! $timezone and $timezone = \Fuel::$timezone;
+		is_null($timezone) and $timezone = \Fuel::$timezone;
+		is_null($pattern) and $pattern = 'local';
 
 		$this->timestamp = $timestamp;
 		$this->set_timezone($timezone);
+		$this->set_pattern($pattern);
 	}
 
 	/**
@@ -621,30 +700,26 @@ class Date
 	 * @param   mixed 	$timezone     vald timezone, or if true, output the time in local time instead of system time
 	 * @return  string
 	 */
-	public function format($pattern_key = 'local', $timezone = null)
+	public function format($pattern_key = null, $timezone = null)
 	{
-		\Config::load('date', 'date');
-
+		is_null($pattern_key) and $pattern_key = $this->pattern;
 		$pattern = \Config::get('date.patterns.'.$pattern_key, $pattern_key);
 
 		// determine the timezone to switch to
 		$timezone === true and $timezone = static::$display_timezone;
 		is_string($timezone) or $timezone = $this->timezone;
 
+		// remember the current timezone
+		$current_tz = date_default_timezone_get();
+
 		// Temporarily change timezone when different from default
-		if (\Fuel::$timezone != $timezone)
-		{
-			date_default_timezone_set($timezone);
-		}
+		date_default_timezone_set($timezone);
 
 		// Create output
 		$output = static::strftime($pattern, $this->timestamp);
 
 		// Change timezone back to default if changed previously
-		if (\Fuel::$timezone != $timezone)
-		{
-			date_default_timezone_set(\Fuel::$timezone);
-		}
+		date_default_timezone_set($current_tz);
 
 		return $output;
 	}
@@ -667,6 +742,16 @@ class Date
 	public function get_timezone()
 	{
 		return $this->timezone;
+	}
+
+	/**
+	 * Returns the default date pattern
+	 *
+	 * @return  string
+	 */
+	public function get_pattern()
+	{
+		return $this->pattern;
 	}
 
 	/**
@@ -709,6 +794,21 @@ class Date
 	public function set_timezone($timezone)
 	{
 		$this->timezone = $timezone;
+
+		return $this;
+	}
+
+	/**
+	 * Change the default format pattern
+	 *
+	 * @param   string  $pattern  date format pattern, as defined in the date config
+	 * @return  Date
+	 */
+	public function set_pattern($pattern)
+	{
+		$pattern = \Config::get('date.patterns.'.$pattern, $pattern);
+
+		$this->pattern = $pattern;
 
 		return $this;
 	}

@@ -6,7 +6,7 @@
  * @version    1.9-dev
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010 - 2019 Fuel Development Team
+ * @copyright  2010-2025 Fuel Development Team
  * @link       https://fuelphp.com
  */
 
@@ -21,10 +21,10 @@ if (PHP_VERSION_ID >= 50600)
  */
 if ( ! function_exists('is_windows'))
 {
- 	function is_windows()
- 	{
- 		return DIRECTORY_SEPARATOR === '\\';
- 	}
+	function is_windows()
+	{
+		return DIRECTORY_SEPARATOR === '\\';
+	}
 }
 
 /**
@@ -98,6 +98,14 @@ if ( ! function_exists('array_to_attr'))
 			if (is_numeric($property))
 			{
 				$property = $value;
+			}
+			elseif(is_bool($value))
+			{
+				if ($value === false)
+				{
+					continue;
+				}
+				$value = $property;
 			}
 
 			$attr_str .= $property.'="'.str_replace('"', '&quot;', $value).'" ';
@@ -399,6 +407,28 @@ if ( ! function_exists('get_common_path'))
 }
 
 /**
+ * Creates a temporary directory with a unique name
+ */
+if ( ! function_exists('tempdir'))
+{
+	function tempdir()
+	{
+		// create a temp file
+		if ($tempdir = tempnam(sys_get_temp_dir(), 'fuel'))
+		{
+			// delete it
+			unlink($tempdir);
+
+			// so we can recreate it as a directory
+			mkdir($tempdir);
+		}
+
+		// return the created path (or false on failure)
+		return $tempdir;
+	}
+}
+
+/**
  * Faster equivalent of call_user_func_array
  */
 if ( ! function_exists('call_fuel_func_array'))
@@ -502,39 +532,39 @@ if ( ! function_exists('call_fuel_func_array'))
  */
 if ( ! function_exists('hash_pbkdf2'))
 {
-    /* PBKDF2 Implementation (described in RFC 2898)
-     *
-     *  @param string a   hash algorithm to use
-     *  @param string p   password
-     *  @param string s   salt
-     *  @param int    c   iteration count (use 1000 or higher)
-     *  @param int    kl  derived key length
-     *  @param bool   r   when set to TRUE, outputs raw binary data. FALSE outputs lowercase hexits.
-     *
-     *  @return string derived key
-     */
-    function hash_pbkdf2($a, $p, $s, $c, $kl = 0, $r = false)
-    {
-        $hl = strlen(hash($a, null, true)); # Hash length
-        $kb = ceil($kl / $hl);              # Key blocks to compute
-        $dk = '';                           # Derived key
+	/* PBKDF2 Implementation (described in RFC 2898)
+	 *
+	 *  @param string a   hash algorithm to use
+	 *  @param string p   password
+	 *  @param string s   salt
+	 *  @param int    c   iteration count (use 1000 or higher)
+	 *  @param int    kl  derived key length
+	 *  @param bool   r   when set to TRUE, outputs raw binary data. FALSE outputs lowercase hexits.
+	 *
+	 *  @return string derived key
+	 */
+	function hash_pbkdf2($a, $p, $s, $c, $kl = 0, $r = false)
+	{
+		$hl = strlen(hash($a, null, true)); # Hash length
+		$kb = ceil($kl / $hl);              # Key blocks to compute
+		$dk = '';                           # Derived key
 
-        # Create key
-        for ( $block = 1; $block <= $kb; $block ++ )
-        {
-            # Initial hash for this block
-            $ib = $b = hash_hmac($a, $s . pack('N', $block), $p, true);
+		# Create key
+		for ( $block = 1; $block <= $kb; $block ++ )
+		{
+			# Initial hash for this block
+			$ib = $b = hash_hmac($a, $s . pack('N', $block), $p, true);
 
-            # Perform block iterations
-            for ( $i = 1; $i < $c; $i ++ )
-            {
-                # XOR each iterate
-                $ib ^= ($b = hash_hmac($a, $b, $p, true));
-            }
-            $dk .= $ib; # Append iterated block
-        }
+			# Perform block iterations
+			for ( $i = 1; $i < $c; $i ++ )
+			{
+				# XOR each iterate
+				$ib ^= ($b = hash_hmac($a, $b, $p, true));
+			}
+			$dk .= $ib; # Append iterated block
+		}
 
-        # Return derived key of correct length
+		# Return derived key of correct length
 		return substr($r ? $dk : bin2hex($dk), 0, $kl);
 	}
 }
@@ -567,5 +597,22 @@ if ( ! function_exists('array_key_last'))
 		}
 
 		return null;
+	}
+}
+
+/**
+ * json_validate for PHP < 8.3.0
+ */
+if ( ! function_exists('json_validate'))
+{
+	function json_validate($json, $depth = 512, $flags = 0)
+	{
+		if ( ! is_string($json))
+		{
+			return false;
+		}
+
+		json_decode($json, false, $depth, $flags);
+		return json_last_error() === JSON_ERROR_NONE;
 	}
 }

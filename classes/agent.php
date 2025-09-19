@@ -6,7 +6,7 @@
  * @version    1.9-dev
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010 - 2019 Fuel Development Team
+ * @copyright  2010-2025 Fuel Development Team
  * @link       https://fuelphp.com
  */
 
@@ -446,7 +446,6 @@ class Agent
 			case 'curl':
 				// initialize the proxy request
 				$curl = curl_init();
-				curl_setopt($curl, CURLOPT_BINARYTRANSFER, 1);
 				curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
 				curl_setopt($curl, CURLOPT_FOLLOWLOCATION, true);
 				curl_setopt($curl, CURLOPT_MAXREDIRS, 5);

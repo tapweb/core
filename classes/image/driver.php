@@ -6,7 +6,7 @@
  * @version    1.9-dev
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010 - 2019 Fuel Development Team
+ * @copyright  2010-2025 Fuel Development Team
  * @link       https://fuelphp.com
  */
 
@@ -248,28 +248,28 @@ abstract class Image_Driver
 	{
 		if ($height == null or $width == null)
 		{
-			if ($height == null and substr($width, -1) == '%')
+			if (is_null($height) and ! is_null($width) and substr($width, -1) == '%')
 			{
 				$height = $width;
 			}
-			elseif (substr($height, -1) == '%' and $width == null)
+			elseif (is_null($width) and ! is_null($height) and substr($height, -1) == '%')
 			{
 				$width = $height;
 			}
 			else
 			{
 				$sizes = $this->sizes();
-				if ($height == null and $width != null)
+				if (is_null($height) and ! is_null($width))
 				{
 					$height = $width * ($sizes->height / $sizes->width);
 				}
-				elseif ($height != null and $width == null)
+				elseif (is_null($width) and ! is_null($height))
 				{
 					$width = $height * ($sizes->width / $sizes->height);
 				}
 				else
 				{
-					throw new \InvalidArgumentException("Width and height cannot be null.");
+					throw new \InvalidArgumentException("Width and height cannot both be null.");
 				}
 			}
 		}
@@ -356,22 +356,22 @@ abstract class Image_Driver
 		{
 			if (bccomp(bcdiv($sizes->width, $width, 10), bcdiv($sizes->height, $height, 10), 10) < 1)
 			{
-				$this->_resize($width, 0, true, false);
+				$this->_resize($width, null, true, false);
 			}
 			else
 			{
-				$this->_resize(0, $height, true, false);
+				$this->_resize(null, $height, true, false);
 			}
 		}
 		else
 		{
 			if ($sizes->width / $width < $sizes->height / $height)
 			{
-				$this->_resize($width, 0, true, false);
+				$this->_resize($width, null, true, false);
 			}
 			else
 			{
-				$this->_resize(0, $height, true, false);
+				$this->_resize(null, $height, true, false);
 			}
 		}
 
@@ -666,16 +666,34 @@ abstract class Image_Driver
 		{
 			$filename .= "." . $this->image_extension;
 		}
-		// Touch the file
-		if ( ! touch($filename))
+
+		try
 		{
-			throw new \RuntimeException("Do not have permission to write to \"$filename\"");
+			// Touch the file
+			// Add @ before touch() due to some stream wrappers (e.g. s3) not supporting touch().
+			@touch($filename);
+		}
+		catch (\Exception $e)
+		{
+			$this->debug("", "Do not have permission to write to <code>$filename</code>");
 		}
 
+
 		// Set the new permissions
-		if ($permissions != null and ! chmod($filename, $permissions))
+		if ($permissions != null)
 		{
-			throw new \RuntimeException("Could not set permissions on the file.");
+			// set the correct rights on the file
+			try
+			{
+				if ( ! chmod($filename, $permissions))
+				{
+					throw new \RuntimeException("Could not set permissions on the file.");
+				}
+			}
+			catch (\PhpErrorException $e)
+			{
+				throw new \RuntimeException("Could not set permissions on the file.");
+			}
 		}
 
 		$this->debug("", "Saving image as <code>$filename</code>");

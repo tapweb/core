@@ -6,7 +6,7 @@
  * @version    1.9-dev
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010 - 2019 Fuel Development Team
+ * @copyright  2010-2025 Fuel Development Team
  * @link       https://fuelphp.com
  */
 
@@ -40,8 +40,13 @@ class File_Handler_File
 		$this->area = $area;
 	}
 
-	public static function forge($path, array $config = array(), File_Area $area = null, $content = array())
+	public static function forge($path, array $config = array(), $area = null, $content = array())
 	{
+		if ( ! is_null($area) and ! $area instanceOf File_Area)
+		{
+			throw new \FuelException(__FUNCTION__ . ': Argument #3 ($area) must be an instance of File_Area, ' . gettype($area) . ' given');
+		}
+
 		$obj = new static($path, $config, \File::instance($area), $content);
 
 		$config['path'] = $path;

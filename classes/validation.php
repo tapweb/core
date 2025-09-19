@@ -6,7 +6,7 @@
  * @version    1.9-dev
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010 - 2019 Fuel Development Team
+ * @copyright  2010-2025 Fuel Development Team
  * @link       https://fuelphp.com
  */
 
@@ -889,11 +889,18 @@ class Validation
 	 */
 	public function _validation_valid_ip($val, $flag = '')
 	{
-        $flag = match (strtolower($flag)) {
-            'ipv4' => FILTER_FLAG_IPV4,
-            'ipv6' => FILTER_FLAG_IPV6,
-            default => FILTER_DEFAULT,
-        };
+		switch (strtolower($flag))
+		{
+			case 'ipv4':
+				$flag = FILTER_FLAG_IPV4;
+				break;
+			case 'ipv6':
+				$flag = FILTER_FLAG_IPV6;
+				break;
+			default:
+				$flag = 0;
+				break;
+		}
 
 		return $this->_empty($val) || filter_var($val, FILTER_VALIDATE_IP, $flag);
 	}
@@ -988,7 +995,7 @@ class Validation
 	 */
 	public function _validation_numeric_min($val, $min_val)
 	{
-		return $this->_empty($val) || floatval($val) >= floatval($min_val);
+		return $this->_empty($val) || $this->float_val($val) >= $this->float_val($min_val);
 	}
 
 	/**
@@ -1000,7 +1007,7 @@ class Validation
 	 */
 	public function _validation_numeric_max($val, $max_val)
 	{
-		return $this->_empty($val) || floatval($val) <= floatval($max_val);
+		return $this->_empty($val) || $this->float_val($val) <= $this->float_val($max_val);
 	}
 
 	/**
@@ -1013,7 +1020,7 @@ class Validation
 	 */
 	public function _validation_numeric_between($val, $min_val, $max_val)
 	{
-		return $this->_empty($val) or (floatval($val) >= floatval($min_val) and floatval($val) <= floatval($max_val));
+		return $this->_empty($val) or ($this->float_val($val) >= $this->float_val($min_val) and $this->float_val($val) <= $this->float_val($max_val));
 	}
 
 	/**
@@ -1076,4 +1083,30 @@ class Validation
 			return false;
 		}
 	}
+
+	/**
+	 * Trim validation replacement, to be able to handle non-string values (deprecated in PHP now)
+	 *
+	 * @param   mixed   $val
+	 * @return  mixed
+	 * @throws  \Validation_Error
+	 */
+	public function _validation_trim($val)
+	{
+		is_string($val) and $val = trim($val);
+
+		return $val;
+	}
+
+	/**
+	 * locale-aware floatval()
+	 */
+	protected function float_val($val)
+	{
+		$locale_info = localeconv();
+		$val = str_replace($locale_info["mon_thousands_sep"] , "", $val);
+		$val = str_replace($locale_info["mon_decimal_point"] , ".", $val);
+		return floatval($val);
+	}
+
 }

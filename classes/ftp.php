@@ -6,7 +6,7 @@
  * @version    1.9-dev
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010 - 2019 Fuel Development Team
+ * @copyright  2010-2025 Fuel Development Team
  * @link       https://fuelphp.com
  */
 
@@ -28,13 +28,15 @@ class Ftp
 {
 	public static $initialized = false;
 
-	protected $_hostname  = 'localhost';
-	protected $_username  = '';
-	protected $_password  = '';
-	protected $_port      = 21;
-	protected $_timeout   = 90;
-	protected $_passive   = true;
-	protected $_debug     = false;
+	protected $_hostname;
+	protected $_username;
+	protected $_password;
+	protected $_port;
+	protected $_timeout;
+	protected $_passive;
+	protected $_ssl_mode;
+	protected $_debug;
+
 	protected $_conn_id   = false;
 
 	/**
@@ -79,12 +81,17 @@ class Ftp
 			$config = $config_arr;
 		}
 
+		// fill in defaults if not given
+		$config = array_merge(
+		    array('hostname' => 'localhost', 'username' => '', 'password' => '', 'port' => 21, 'timeout' => 90, 'passive' => true, 'ssl_mode' => false, 'debug' => false),
+		    $config);
+
 		// Prep the hostname
 		$this->_hostname = preg_replace('|.+?://|', '', $config['hostname']);
 		$this->_username = $config['username'];
 		$this->_password = $config['password'];
-		$this->_timeout  = ! empty($config['timeout']) ? (int) $config['timeout'] : 90;
-		$this->_port     = ! empty($config['port']) ? (int) $config['port'] : 21;
+		$this->_timeout  = (int) $config['timeout'];
+		$this->_port     = (int) $config['port'];
 		$this->_passive  = (bool) $config['passive'];
 		$this->_ssl_mode = (bool) $config['ssl_mode'];
 		$this->_debug    = (bool) $config['debug'];
@@ -164,7 +171,7 @@ class Ftp
 	 */
 	protected function _is_conn()
 	{
-		if ( ! is_resource($this->_conn_id))
+		if ( ! is_resource($this->_conn_id) and ! $this->_conn_id instanceOf \FTP\Connection)
 		{
 			if ($this->_debug == true)
 			{

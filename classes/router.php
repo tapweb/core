@@ -6,7 +6,7 @@
  * @version    1.9-dev
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010 - 2019 Fuel Development Team
+ * @copyright  2010-2025 Fuel Development Team
  * @link       https://fuelphp.com
  */
 
@@ -55,6 +55,10 @@ class Router
 		elseif ($options instanceof Route)
 		{
 			static::$routes[$path] = $options;
+			return;
+		}
+		elseif (is_null($path))
+		{
 			return;
 		}
 
@@ -199,15 +203,18 @@ class Router
 	/**
 	 * Processes the given request using the defined routes
 	 *
-	 * @param   \Request  $request  the given Request object
-	 * @param   bool      $route    whether to use the defined routes or not
+	 * @param   \Request  $request     the given Request object
+	 * @param   bool      $use_routes   whether to use the defined routes or not
 	 * @return  mixed  the match array or false
 	 */
-	public static function process(\Request $request, $route = true)
+	public static function process(\Request $request, $use_routes = true)
 	{
-		$match = false;
+		static $stack = array();
 
-		if ($route)
+		$match = false;
+		$resolved = null;
+
+		if ($use_routes)
 		{
 			foreach (static::$routes as $route)
 			{
@@ -230,7 +237,26 @@ class Router
 			return $match;
 		}
 
-		return static::parse_match($match);
+		// Do we need to resolve recursively?
+		if ( ! $resolved = static::parse_match($match) and \Config::get('routing.recursive', false))
+		{
+			// new uri to resolve
+			$uri = implode('/', $match->segments);
+
+			// Prevent unresolvable loops
+			if ( ! in_array($uri, $stack))
+			{
+				$stack[] = $uri;
+				$request = clone $request;
+				$request->uri = new Uri($uri);
+				return static::process($request, $use_routes);
+			}
+		}
+
+		// reset the resolve stack
+		$stack = array();
+
+		return $resolved;
 	}
 
 	/**

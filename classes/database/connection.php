@@ -6,7 +6,7 @@
  * @version    1.9-dev
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010 - 2019 Fuel Development Team
+ * @copyright  2010-2025 Fuel Development Team
  * @copyright  2008 - 2009 Kohana Team
  * @link       https://fuelphp.com
  */
@@ -44,7 +44,7 @@ abstract class Database_Connection
 	 *
 	 * @throws \FuelException
 	 */
-	public static function instance($name = null, array $config = null, $writable = true)
+	public static function instance($name = null, $config = null, $writable = true)
 	{
 		\Config::load('db', true);
 		if ($name === null)
@@ -67,7 +67,7 @@ abstract class Database_Connection
 				$config = \Config::get('db.'.$name);
 			}
 
-			if ( ! isset($config['type']))
+			if ( ! is_array($config) or ! isset($config['type']))
 			{
 				throw new \FuelException('Database type not defined in "'.$name.'" configuration or "'.$name.'" configuration does not exist');
 			}
@@ -139,7 +139,7 @@ abstract class Database_Connection
 		$this->_instance = $name;
 
 		// make sure we have all connection parameters, add defaults for those missing
-		$this->_config = array_merge(array(
+		$this->_config = \Arr::merge(array(
 			'connection'  => array(
 				'dsn'        => '',
 				'hostname'   => '',
@@ -280,7 +280,7 @@ abstract class Database_Connection
 	 * @param   ...
 	 * @return  Database_Query_Builder_Select
 	 */
-	public function select(array $args = null)
+	public function select($args = null)
 	{
 		$instance = new \Database_Query_Builder_Select($args);
 		return $instance->set_connection($this);
@@ -296,8 +296,14 @@ abstract class Database_Connection
 	 * @param   array   list of column names or array($column, $alias) or object
 	 * @return  Database_Query_Builder_Insert
 	 */
-	public function insert($table = null, array $columns = null)
+	public function insert($table = null, $columns = null)
 	{
+		// columns must be a nullable array
+		if ( ! is_null($columns) and ! is_array($columns))
+		{
+			throw new \FuelException(__FUNCTION__ . ': Argument #2 ($columns) must be of type array, ' . gettype($columns) . ' given');
+		}
+
 		$instance = new \Database_Query_Builder_Insert($table, $columns);
 		return $instance->set_connection($this);
 	}
@@ -449,7 +455,7 @@ abstract class Database_Connection
 	{
 		static $types = array(
 			// SQL-92
-			'bit'                           => array('type' => 'string', 'exact' => true),
+			'bit'                           => array('type' => 'int', 'min' => '0', 'max' => '1'),
 			'bit varying'                   => array('type' => 'string'),
 			'char'                          => array('type' => 'string', 'exact' => true),
 			'char varying'                  => array('type' => 'string'),
@@ -498,6 +504,9 @@ abstract class Database_Connection
 			'binary'            => array('type' => 'string', 'binary' => true, 'exact' => true),
 			'binary varying'    => array('type' => 'string', 'binary' => true),
 			'varbinary'         => array('type' => 'string', 'binary' => true),
+
+			// SQL:2012
+			'nvarchar'                 => array('type' => 'string'),
 		);
 
 		if (isset($types[$type]))

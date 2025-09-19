@@ -6,7 +6,7 @@
  * @version    1.9-dev
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010 - 2019 Fuel Development Team
+ * @copyright  2010-2025 Fuel Development Team
  * @link       https://fuelphp.com
  */
 
@@ -262,7 +262,7 @@ class Pagination
 	public function render($raw = false)
 	{
 		// no links if we only have one page
-		if ($this->config['total_pages'] == 1)
+		if ($this->config['total_pages'] <= 1)
 		{
 			return $raw ? array() : '';
 		}

@@ -6,7 +6,7 @@
  * @version    1.9-dev
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010 - 2019 Fuel Development Team
+ * @copyright  2010-2025 Fuel Development Team
  * @link       https://fuelphp.com
  */
 
@@ -106,7 +106,18 @@ class Log
 		if ( ! filesize($path.$filename))
 		{
 			fwrite($handle, "<?php defined('COREPATH') or exit('No direct script access allowed'); ?>".PHP_EOL.PHP_EOL);
-			chmod($path.$filename, \Config::get('file.chmod.files', 0666));
+			try
+			{
+				chmod($path.$filename, \Config::get('file.chmod.files', 0666));
+			}
+			catch (\PhpErrorException $e)
+			{
+				// if we get something else then a chmod error, bail out
+				if (substr($e->getMessage(), 0, 8) !== 'chmod():')
+				{
+					throw new $e;
+				}
+			}
 		}
 		fclose($handle);
 

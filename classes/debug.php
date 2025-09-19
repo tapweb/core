@@ -6,7 +6,7 @@
  * @version    1.9-dev
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010 - 2019 Fuel Development Team
+ * @copyright  2010-2025 Fuel Development Team
  * @link       https://fuelphp.com
  */
 
@@ -163,11 +163,24 @@ JS;
 	 */
 	public static function format($name, $var, $level = 0, $indent_char = '&nbsp;&nbsp;&nbsp;&nbsp;', $scope = '')
 	{
+		$color = (is_string($var) and $var == "*uninitialized*") ? "#0000E0" : "#E00000";
+		if ($level and is_null($name))
+		{
+			$name = '<i style="color:#888">null</i>';
+		}
+		elseif ($level and $name === "")
+		{
+			$name = '<i style="color:#888">empty</i>';
+		}
+		else
+		{
+			$name = htmlentities($name);
+		}
 		$return = str_repeat($indent_char, $level);
 		if (is_array($var))
 		{
 			$id = 'fuel_debug_'.mt_rand();
-			$return .= "<i>{$scope}</i> <strong>".htmlentities($name)."</strong>";
+			$return .= (empty($scope) ? '' : "<i>{$scope}</i> "). "<strong>".$name."</strong>";
 			$return .=  " (Array, ".count($var)." element".(count($var)!=1 ? "s" : "").")";
 			if (count($var) > 0 and static::$max_nesting_level > $level)
 			{
@@ -202,27 +215,39 @@ JS;
 		}
 		elseif (is_string($var))
 		{
-			$return .= "<i>{$scope}</i> <strong>".htmlentities($name)."</strong> (String): <span style=\"color:#E00000;\">\"".\Security::htmlentities($var)."\"</span> (".strlen($var)." characters)\n";
+			$return .= (empty($scope) ? '' : "<i>{$scope}</i> "). "<strong>".$name."</strong> (String): <span style=\"color:".$color.";\">\"".\Security::htmlentities($var)."\"</span> (".strlen($var)." characters)\n";
 		}
 		elseif (is_float($var))
 		{
-			$return .= "<i>{$scope}</i> <strong>".htmlentities($name)."</strong> (Float): {$var}\n";
+			$return .= (empty($scope) ? '' : "<i>{$scope}</i> "). "<strong>".$name."</strong> (Float): {$var}\n";
 		}
 		elseif (is_long($var))
 		{
-			$return .= "<i>{$scope}</i> <strong>".htmlentities($name)."</strong> (Integer): {$var}\n";
+			$return .= (empty($scope) ? '' : "<i>{$scope}</i> "). "<strong>".$name."</strong> (Integer): {$var}\n";
 		}
 		elseif (is_null($var))
 		{
-			$return .= "<i>{$scope}</i> <strong>".htmlentities($name)."</strong> : null\n";
+			$return .= (empty($scope) ? '' : "<i>{$scope}</i> "). "<strong>".$name."</strong> : null\n";
 		}
 		elseif (is_bool($var))
 		{
-			$return .= "<i>{$scope}</i> <strong>".htmlentities($name)."</strong> (Boolean): ".($var ? 'true' : 'false')."\n";
+			$return .= (empty($scope) ? '' : "<i>{$scope}</i> "). "<strong>".$name."</strong> (Boolean): ".($var ? 'true' : 'false')."\n";
 		}
 		elseif (is_double($var))
 		{
-			$return .= "<i>{$scope}</i> <strong>".htmlentities($name)."</strong> (Double): {$var}\n";
+			$return .= (empty($scope) ? '' : "<i>{$scope}</i> "). "<strong>".$name."</strong> (Double): {$var}\n";
+		}
+		elseif ($var instanceOf \UnitEnum)
+		{
+			// dirty hack to get the enum
+			ob_start();
+			var_dump($var);
+			$contents = ob_get_contents();
+			ob_end_clean();
+
+			preg_match('~enum(?:<\/b>)?\((?:<i>)?(.*?)(?:<\/i>)?\)~', $contents, $matches);
+
+			$return .= (empty($scope) ? '' : "<i>{$scope}</i> "). "<strong>".$name."</strong> (Enum): {$matches[1]}\n";
 		}
 		elseif (is_object($var))
 		{
@@ -252,12 +277,15 @@ JS;
 			$id = 'fuel_debug_'.mt_rand();
 			$rvar = new \ReflectionObject($var);
 			$vars = $rvar->getProperties();
-			$return .= "<i>{$scope}</i> <strong>{$name}</strong> (Object #".$matches[2]."): ".get_class($var);
-			if (count($vars) > 0 and static::$max_nesting_level > $level)
+			$return .= (empty($scope) ? '' : "<i>{$scope}</i> "). "<strong>{$name}</strong> (Object #".$matches[2]."): ".get_class($var);
+			if (count($vars) > 0)
 			{
-				$return .= " <a href=\"javascript:fuel_debug_toggle('$id');\" title=\"Click to ".(static::$js_toggle_open ? "close" : "open")."\">&crarr;</a>\n";
+				if (static::$max_nesting_level > $level)
+				{
+					$return .= " <a href=\"javascript:fuel_debug_toggle('$id');\" title=\"Click to ".(static::$js_toggle_open ? "close" : "open")."\">&crarr;</a>";
+				}
+				$return .= "\n";
 			}
-			$return .= "\n";
 
 			$sub_return = '';
 			foreach ($rvar->getProperties() as $prop)
@@ -275,13 +303,24 @@ JS;
 				{
 					$scope = 'public';
 				}
+				if (method_exists($prop, 'getType') and $prop->getType())
+				{
+					$scope .= ' <i>'.$prop->getType().'</i>';
+				}
 				if (static::$max_nesting_level <= $level)
 				{
 					$sub_return .= str_repeat($indent_char, $level + 1)."...\n";
 				}
 				else
 				{
-					$sub_return .= static::format($prop->name, $prop->getValue($var), $level + 1, $indent_char, $scope);
+					if ( ! $prop->isInitialized($var))
+					{
+						$sub_return .= static::format($prop->name, '*uninitialized*', $level + 1, $indent_char, $scope);
+					}
+					else
+					{
+						$sub_return .= static::format($prop->name, $prop->getValue($var), $level + 1, $indent_char, $scope);
+					}
 				}
 			}
 
@@ -296,7 +335,7 @@ JS;
 		}
 		else
 		{
-			$return .= "<i>{$scope}</i> <strong>".htmlentities($name)."</strong>: {$var}\n";
+			$return .= (empty($scope) ? '' : "<i>{$scope}</i> "). "<strong>".$name."</strong>: {$var}\n";
 		}
 		return $return;
 	}
@@ -342,12 +381,13 @@ JS;
 
 		if ($highlight)
 		{
-			$to_replace = array('<code>', '</code>', '<span style="color: #0000BB">&lt;?php&nbsp;', "\n");
-			$replace_with = array('', '', '<span style="color: #0000BB">', '');
+			$to_replace = array('<pre>', '</pre>', '<code>', '<code style="color: #000000">', '</code>', '<span style="color: #0000BB">&lt;?php', '&lt;?php', "\n");
+			$replace_with = array('', '', '', '', '', '<span style="color: #0000BB">', '', '');
 
 			foreach ($debug_lines as & $line)
 			{
 				$line = str_replace($to_replace, $replace_with, highlight_string('<?php ' . $line, TRUE));
+				$line = preg_replace('~(?<=\s)\s~', '&nbsp;', $line);
 			}
 		}
 

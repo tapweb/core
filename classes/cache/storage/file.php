@@ -6,7 +6,7 @@
  * @version    1.9-dev
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010 - 2019 Fuel Development Team
+ * @copyright  2010-2025 Fuel Development Team
  * @link       https://fuelphp.com
  */
 
@@ -271,6 +271,12 @@ class Cache_Storage_File extends \Cache_Storage_Driver
 						}
 						catch (\PHPErrorException $e)
 						{
+							// if we get something else then a chmod error, bail out
+							if (substr($e->getMessage(), 0, 8) !== 'chmod():')
+							{
+								throw new $e;
+							}
+
 							return false;
 						}
 					}
@@ -307,7 +313,18 @@ class Cache_Storage_File extends \Cache_Storage_Driver
 		fclose($handle);
 
 		// set the correct rights on the file
-		chmod($file, \Config::get('file.chmod.files', 0666));
+		try
+		{
+			chmod($file, \Config::get('file.chmod.files', 0666));
+		}
+		catch (\PhpErrorException $e)
+		{
+			// if we get something else then a chmod error, bail out
+			if (substr($e->getMessage(), 0, 8) !== 'chmod():')
+			{
+				throw new $e;
+			}
+		}
 
 		return true;
 	}
