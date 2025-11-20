@@ -6,14 +6,14 @@
  * @version    1.9-dev
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010 - 2019 Fuel Development Team
+ * @copyright  2010-2025 Fuel Development Team
  * @link       https://fuelphp.com
  */
 
 namespace Fuel\Core;
 
-use \phpseclib\Crypt\AES;
-use \phpseclib\Crypt\Hash;
+use \phpseclib3\Crypt\AES;
+use \phpseclib3\Crypt\Hash;
 
 use \ParagonIE\Fuel\Binary;
 use \ParagonIE\Fuel\Base64UrlSafe;
@@ -417,6 +417,20 @@ class Crypt
 	protected $hasher = null;
 
 	/**
+	 * Crypto object used to encrypt/decrypt
+	 *
+	 * @var	object
+	 */
+	protected $legacy_crypter = null;
+
+	/**
+	 * Hash object used to generate hashes
+	 *
+	 * @var	object
+	 */
+	protected $legacy_hasher = null;
+
+	/**
 	 * Crypto configuration
 	 *
 	 * @var	array
@@ -435,7 +449,7 @@ class Crypt
 		// in case we need to decode legacy encrypted strings
 		if ( ! empty($this->config['legacy']))
 		{
-			$this->legacy_crypter = new AES();
+			$this->legacy_crypter = new AES('cbc');
 			$this->legacy_hasher = new Hash('sha256');
 
 			$this->legacy_crypter->enableContinuousBuffer();
@@ -526,14 +540,21 @@ class Crypt
 	 */
 	protected function decode($value, $key = false, $keylength = false)
 	{
+		// anything to decrypt?
+		if (empty($value))
+		{
+			// nope, return as-is
+			return $value;
+		}
+
 		// legacy or sodium value?
-		$value = explode('S:', $value);
-		if ( ! isset($value[1]))
+		$values = explode('S:', (string) $value);
+		if ( ! isset($values[1]))
 		{
 			// decode using the legacy method
-			return $this->legacy_decode($value[0], $key, $keylength);
+			return $this->legacy_decode($value, $key, $keylength);
 		}
-		$value = $value[1];
+		$value = $values[1];
 
 		// get the binary key
 		if ( ! $key)

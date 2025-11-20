@@ -6,7 +6,7 @@
  * @version    1.9-dev
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010 - 2019 Fuel Development Team
+ * @copyright  2010-2025 Fuel Development Team
  * @copyright  2008 - 2009 Kohana Team
  * @link       https://fuelphp.com
  *
@@ -52,7 +52,7 @@ class Database_PDO_Connection extends \Database_Connection
 			// use client compression with mysql or mysqli (doesn't work with mysqlnd)
 			$this->_config['attrs'][\PDO::MYSQL_ATTR_COMPRESS] = true;
 		}
-		
+
 		// convert generic config values to specific attributes
 		if ( ! empty($this->_config['connection']['persistent']))
 		{
@@ -492,6 +492,7 @@ class Database_PDO_Connection extends \Database_Connection
 				$result = "'".str_replace("'", "''", $value)."'";
 			}
 		}
+
 		return $result;
 	}
 

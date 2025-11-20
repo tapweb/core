@@ -6,7 +6,7 @@
  * @version    1.9-dev
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010 - 2019 Fuel Development Team
+ * @copyright  2010-2025 Fuel Development Team
  * @link       https://fuelphp.com
  */
 
@@ -115,6 +115,7 @@ class Route
 			':everything',
 			':alnum',
 			':num',
+			':decimal',
 			':alpha',
 			':segment',
 		), array(
@@ -122,6 +123,7 @@ class Route
 			'.*',
 			'[[:alnum:]]+',
 			'[[:digit:]]+',
+			'[+-]?((\d+[\.,]?\d*)|([\.,]\d+))',
 			'[[:alpha:]]+',
 			'[^/]*',
 		), $this->path);

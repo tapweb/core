@@ -6,7 +6,7 @@
  * @version    1.9-dev
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010 - 2019 Fuel Development Team
+ * @copyright  2010-2025 Fuel Development Team
  * @link       https://fuelphp.com
  */
 
@@ -331,7 +331,7 @@ class Uri
 		$this->uri = trim($uri, '/');
 
 		// determine the uri segment list
-		if (empty($uri))
+		if (empty($this->uri))
 		{
 			$this->segments = array();
 		}

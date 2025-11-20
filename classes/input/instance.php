@@ -6,7 +6,7 @@
  * @version    1.9-dev
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010 - 2019 Fuel Development Team
+ * @copyright  2010-2025 Fuel Development Team
  * @link       https://fuelphp.com
  */
 
@@ -82,8 +82,20 @@ class Input_Instance
 	/**
 	 *
 	 */
-	public function __construct(Request $new = null, Input_Instance $input = null)
+	public function __construct($new = null, $input = null)
 	{
+		// new must be a nullable Request instance
+		if ( ! is_null($new) and ! $new instanceOf Request)
+		{
+			throw new \FuelException(__FUNCTION__ . ': Argument #1 ($new) must be an instance of Request, ' . gettype($new) . ' given');
+		}
+
+		// input must be a nullable Input_Instance instance
+		if ( ! is_null($input) and ! $input instanceOf Input_Instance)
+		{
+			throw new \FuelException(__FUNCTION__ . ': Argument #2 ($input) must be an instance of Input_Instance, ' . gettype($input) . ' given');
+		}
+
 		// store the associated request
 		$this->request = $new;
 
@@ -101,6 +113,9 @@ class Input_Instance
 		}
 		else
 		{
+			// uri detection
+			$this->uri();
+
 			// fetch global input data
 			$this->hydrate();
 		}
@@ -325,10 +340,18 @@ class Input_Instance
 	 */
 	public function raw()
 	{
+		// we need to read the input only once
+		static $raw_input;
+
+		if ($raw_input === null)
+		{
+			$raw_input = file_get_contents('php://input');
+		}
+
 		if ($this->raw_input === null)
 		{
-			// get php raw input
-			$this->raw_input = file_get_contents('php://input');
+			// get php raw input stored earlier
+			$this->raw_input = $raw_input;
 		}
 
 		return $this->raw_input;
@@ -450,7 +473,7 @@ class Input_Instance
 		$method = strtolower($this->method());
 
 		// get the content type from the header, strip optional parameters
-		$content_header = \Input::headers('Content-Type', false);
+		$content_header = \Input::headers('Content-Type', '');
 		if (($content_type = strstr($content_header, ';', true)) === false)
 		{
 			$content_type = $content_header;

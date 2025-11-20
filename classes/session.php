@@ -6,7 +6,7 @@
  * @version    1.9-dev
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010 - 2019 Fuel Development Team
+ * @copyright  2010-2025 Fuel Development Team
  * @link       https://fuelphp.com
  */
 
@@ -77,48 +77,56 @@ class Session
 		if (\Config::get('session.native_emulation', false))
 		{
 			// emulate native PHP sessions
-			session_set_save_handler(
-				// open
-				function ($savePath, $sessionName) {
-					return true;
-				},
-				// close
-				function () {
-					return true;
-				},
-				// read
-				function ($sessionId) {
-					// copy all existing session vars into the PHP session store
-					$_SESSION = \Session::get();
-					$_SESSION['__org__'] = $_SESSION;
-					return '';
-				},
-				// write
-				function ($sessionId, $data) {
-					// get the original data
-					$org = isset($_SESSION['__org__']) ? $_SESSION['__org__'] : array();
-					unset($_SESSION['__org__']);
+			if (PHP_VERSION_ID < 80000)
+			{
+				session_set_save_handler(
+					// open
+					function ($savePath, $sessionName) {
+						return true;
+					},
+					// close
+					function () {
+						return true;
+					},
+					// read
+					function ($sessionId) {
+						// copy all existing session vars into the PHP session store
+						$_SESSION = \Session::get();
+						$_SESSION['__org__'] = $_SESSION;
+						return '';
+					},
+					// write
+					function ($sessionId, $data) {
+						// get the original data
+						$org = isset($_SESSION['__org__']) ? $_SESSION['__org__'] : array();
+						unset($_SESSION['__org__']);
 
-					// do we need to remove stuff?
-					if ($remove = array_diff_key($org, $_SESSION))
-					{
-						\Session::delete(array_keys($remove));
+						// do we need to remove stuff?
+						if ($remove = array_diff_key($org, $_SESSION))
+						{
+							\Session::delete(array_keys($remove));
+						}
+
+						// add or update the remainder
+						empty($_SESSION) or \Session::set($_SESSION);
+						return true;
+					},
+					// destroy
+					function ($sessionId) {
+						\Session::destroy();
+						return true;
+					},
+					// gc
+					function ($lifetime) {
+						return true;
 					}
-
-					// add or update the remainder
-					empty($_SESSION) or \Session::set($_SESSION);
-					return true;
-				},
-				// destroy
-				function ($sessionId) {
-					\Session::destroy();
-					return true;
-				},
-				// gc
-				function ($lifetime) {
-					return true;
-				}
 			);
+			}
+			else
+			{
+				// use an external file here to avoid parse errors in PHP < 8.4
+				require('sessionhandler84.php');
+			}
 		}
 	}
 

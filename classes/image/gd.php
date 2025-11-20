@@ -6,7 +6,7 @@
  * @version    1.9-dev
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010 - 2019 Fuel Development Team
+ * @copyright  2010-2025 Fuel Development Team
  * @link       https://fuelphp.com
  */
 
@@ -86,7 +86,15 @@ class Image_Gd extends \Image_Driver
 		$degrees = 360 - $degrees;
 		$bgcolor = $this->config['bgcolor'] !== null ? $this->config['bgcolor'] : '#000';
 		$color = $this->create_color($this->image_data, $bgcolor, 100);
-		$this->image_data = imagerotate($this->image_data, $degrees, $color, false);
+
+		if (version_compare(phpversion(), '8.3', '>='))
+		{
+			$this->image_data = imagerotate($this->image_data, $degrees, $color);
+		}
+		else
+		{
+			$this->image_data = imagerotate($this->image_data, $degrees, $color, false);
+		}
 	}
 
 	protected function _watermark($filename, $position, $padding = array(5,5))

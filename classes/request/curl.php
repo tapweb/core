@@ -6,7 +6,7 @@
  * @version    1.9-dev
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010 - 2019 Fuel Development Team
+ * @copyright  2010-2025 Fuel Development Team
  * @link       https://fuelphp.com
  */
 
@@ -142,7 +142,6 @@ class Request_Curl extends \Request_Driver
 		}
 
 		$additional_params and $this->params = \Arr::merge($this->params, $additional_params);
-		$this->method and $this->options[CURLOPT_CUSTOMREQUEST] = $this->method;
 
 		if ( ! empty($this->method))
 		{
@@ -303,6 +302,10 @@ class Request_Curl extends \Request_Driver
 	{
 		// Detect the request content type, default to 'text/plain'
 		$content_type = isset($this->headers['Content-Type']) ? $this->headers['Content-Type'] : $this->response_info('content_type', 'text/plain');
+
+		// strip additional directives
+		$content_type = explode(';', $content_type);
+		$content_type = trim($content_type[0]);
 
 		// Get the correct format for the current content type
 		$format = \Arr::key_exists(static::$auto_detect_formats, $content_type) ? static::$auto_detect_formats[$content_type] : null;

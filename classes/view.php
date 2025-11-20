@@ -6,7 +6,7 @@
  * @version    1.9-dev
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010 - 2019 Fuel Development Team
+ * @copyright  2010-2025 Fuel Development Team
  * @link       https://fuelphp.com
  */
 
@@ -125,10 +125,17 @@ class View
 			$data = get_object_vars($data);
 		}
 
-		// else it better by and array !
-		elseif ($data and ! is_array($data))
+		// if we have any data
+		if ( ! is_null($data))
 		{
-			throw new \InvalidArgumentException('The data parameter only accepts objects and arrays.');
+			// it better by and array !
+			if( ! is_array($data))
+			{
+				throw new \InvalidArgumentException('The data parameter only accepts objects and arrays.');
+			}
+
+			// Add the values to the current data
+			$this->data = $data;
 		}
 
 		$this->auto_filter = is_null($filter) ? \Config::get('security.auto_filter_output', true) : $filter;
@@ -138,12 +145,6 @@ class View
 		if ($file !== null)
 		{
 			$this->set_filename($file);
-		}
-
-		if ($data !== null)
-		{
-			// Add the values to the current data
-			$this->data = $data;
 		}
 
 		// store the current request search paths to deal with out-of-context rendering
@@ -453,20 +454,24 @@ class View
 			// strip the extension from it
 			$pathinfo = pathinfo($file);
 
-			// add the result to the search list
-			if ($reverse)
+			// make sure it has an extension
+			if (array_key_exists('extension', $pathinfo))
 			{
-				array_unshift($searches, array(
-					'file' => substr($file, 0, strlen($pathinfo['extension'])*-1 - 1),
-					 'extension' => $pathinfo['extension'],
-				));
-			}
-			else
-			{
-				$searches[] = array(
-					'file' => substr($file, 0, strlen($pathinfo['extension'])*-1 - 1),
-					 'extension' => $pathinfo['extension'],
-				);
+				// add the result to the search list
+				if ($reverse)
+				{
+					array_unshift($searches, array(
+						'file' => substr($file, 0, strlen($pathinfo['extension'])*-1 - 1),
+						 'extension' => $pathinfo['extension'],
+					));
+				}
+				else
+				{
+					$searches[] = array(
+						'file' => substr($file, 0, strlen($pathinfo['extension'])*-1 - 1),
+						 'extension' => $pathinfo['extension'],
+					);
+				}
 			}
 		}
 

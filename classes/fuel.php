@@ -6,7 +6,7 @@
  * @version    1.9-dev
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010 - 2019 Fuel Development Team
+ * @copyright  2010-2025 Fuel Development Team
  * @link       https://fuelphp.com
  */
 
@@ -126,12 +126,20 @@ class Fuel
 			throw new \FuelException("You can't initialize Fuel more than once.");
 		}
 
+		\Config::load($config);
+
+		// Enable profiling if needed
+		static::$profiling = \Config::get('profiling', false);
+		if (static::$profiling or \Config::get('log_profile_data', false))
+		{
+			\Profiler::init();
+			\Profiler::mark(__METHOD__.' Start');
+		}
+
 		static::$_paths = array(APPPATH, COREPATH);
 
 		// Is Fuel running on the command line?
 		static::$is_cli = (bool) defined('STDIN');
-
-		\Config::load($config);
 
 		// Disable output compression if the client doesn't support it
 		if (static::$is_cli or ! in_array('gzip', explode(', ', \Input::headers('Accept-Encoding', ''))))
@@ -145,13 +153,6 @@ class Fuel
 		if (\Config::get('caching', false))
 		{
 			\Finder::instance()->read_cache('FuelFileFinder');
-		}
-
-		// Enable profiling if needed
-		static::$profiling = \Config::get('profiling', false);
-		if (static::$profiling or \Config::get('log_profile_data', false))
-		{
-			\Profiler::init();
 		}
 
 		// set a default timezone if one is defined
@@ -171,11 +172,18 @@ class Fuel
 
 		static::$locale = \Config::get('locale', static::$locale);
 
-		// Set locale, log warning when it fails
+		// Set locale, throw an error when it fails
 		if (static::$locale)
 		{
-			setlocale(LC_ALL, static::$locale) or
-				logger(\Fuel::L_WARNING, 'The configured locale '.static::$locale.' is not installed on your system.', __METHOD__);
+			foreach( (array) \Config::get('locale_category', LC_ALL) as $category)
+			{
+				if ( ! $set = setlocale($category, static::$locale))
+				{
+					throw new \PHPErrorException('The configured locale(s) "'.implode(',', (array) static::$locale).'" can not be found on your system.');
+				}
+			}
+			// update the locale with the one actually set
+			static::$locale = $set;
 		}
 
 		if ( ! static::$is_cli)
@@ -186,14 +194,14 @@ class Fuel
 			}
 		}
 
-		// Load in the routes
-		\Config::load('routes', true);
-		\Router::add(\Config::get('routes'));
-
 		\Event::register('fuel-shutdown', 'Fuel::finish');
 
 		// Always load classes, config & language set in always_load.php config
 		static::always_load();
+
+		// Load in the routes
+		\Config::load('routes', true);
+		\Router::add(\Config::get('routes'));
 
 		// BC FIX FOR APPLICATIONS <= 1.6.1, makes Redis_Db available as Redis,
 		// like it was in versions before 1.7
@@ -353,7 +361,7 @@ class Fuel
 		{
 			foreach ($array['classes'] as $class)
 			{
-				if ( ! class_exists($class = \Str::ucwords($class)))
+				if ( ! \Autoloader::load(\Str::ucwords($class)))
 				{
 					throw new \FuelException('Class '.$class.' defined in your "always_load" config could not be loaded.');
 				}
@@ -424,8 +432,11 @@ class Fuel
 
 			foreach ($paths + $extra as $r => $s)
 			{
-				$search[] = rtrim($s, DS).DS;
-				$replace[] = rtrim($r, DS).DS;
+				if ($s != '/' and is_dir($s))
+				{
+					$search[] = rtrim($s, DS).DS;
+					$replace[] = rtrim($r, DS).DS;
+				}
 			}
 		}
 

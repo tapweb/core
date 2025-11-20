@@ -6,7 +6,7 @@
  * @version    1.9-dev
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010 - 2019 Fuel Development Team
+ * @copyright  2010-2025 Fuel Development Team
  * @link       https://fuelphp.com
  */
 
@@ -159,7 +159,7 @@ return array(
 		 *  Which errors should we show, but continue execution? You can add
 		 *  the following:
 		 *
-		 *      E_NOTICE, E_WARNING, E_DEPRECATED, E_STRICT
+		 *      E_NOTICE, E_WARNING, E_DEPRECATED, or E_STRICT ( only < PHP 8.4)
 		 *
 		 *  to mimic PHP's default behaviour (which is to continue
 		 *  on non-fatal errors). We consider this bad practice.
@@ -235,6 +235,8 @@ return array(
 	 */
 
 	'locale' => 'en_US',
+
+	'locale-category' => LC_ALL,
 
 	/**
 	 * -------------------------------------------------------------------------
@@ -596,7 +598,7 @@ return array(
 		 */
 
 		'http_only' => false,
-		
+
 		/**
 		 * ---------------------------------------------------------------------
 		 *  Security - Mode
@@ -644,6 +646,18 @@ return array(
 	 */
 
 	'routing' => array(
+		/**
+		 * ---------------------------------------------------------------------
+		 *  Recursive
+		 * ---------------------------------------------------------------------
+		 *
+		 *  Whether or not a matched route should be looked up again if it
+		 *  can't be resolved to a controller.
+		 *
+		 */
+
+		'recursive' => false,
+
 		/**
 		 * ---------------------------------------------------------------------
 		 *  Compatibility
