@@ -52,6 +52,15 @@ if ( ! function_exists('call_fuel_func_array'))
 			is_string($callback) and $callback = ltrim($callback, '\\');
 		}
 
+		// convert null to an empty string for native callbacks that deprecate null
+		if (is_string($callback) and in_array($callback, array('trim'), true))
+		{
+			$args = array_map(function ($item)
+			{
+				return $item ?? '';
+			}, $args);
+		}
+
 		return $callback(...$args);
 	}
 }
