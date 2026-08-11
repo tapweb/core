@@ -6,7 +6,7 @@
  * @version    1.9-dev
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010-2025 Fuel Development Team
+ * @copyright  2010-2026 Fuel Development Team
  * @link       https://fuelphp.com
  */
 
@@ -198,7 +198,6 @@ class Request_Curl extends \Request_Driver
 		else
 		{
 			// Request successful
-			curl_close($connection);
 			$this->set_defaults();
 
 			return $this;

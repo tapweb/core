@@ -6,7 +6,7 @@
  * @version    1.9-dev
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010-2025 Fuel Development Team
+ * @copyright  2010-2026 Fuel Development Team
  * @link       https://fuelphp.com
  */
 
@@ -193,12 +193,17 @@ abstract class Lang_File implements Lang_Interface
 		// make sure we have a fallback
 		$path or $path = APPPATH.'lang'.DS.$identifier;
 
+		// update the stored filename
+		$this->file = $path;
+
+		// make sure the directory for this file exists
 		$path = pathinfo($path);
 		if ( ! is_dir($path['dirname']))
 		{
 			mkdir($path['dirname'], 0777, true);
 		}
 
+		// write it
 		return \File::update($path['dirname'], $path['basename'], $output);
 	}
 

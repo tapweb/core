@@ -6,7 +6,7 @@
  * @version    1.9-dev
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010-2025 Fuel Development Team
+ * @copyright  2010-2026 Fuel Development Team
  * @link       https://fuelphp.com
  */
 
@@ -200,6 +200,10 @@ class Format
 					$bool = $value ? '1' : '0';
 				}
 				$structure->addChild($key, $bool);
+			}
+			elseif (is_null($value))
+			{
+				$structure->addChild($key, null);
 			}
 			else
 			{

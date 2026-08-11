@@ -6,7 +6,7 @@
  * @version    1.9-dev
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010-2025 Fuel Development Team
+ * @copyright  2010-2026 Fuel Development Team
  * @link       https://fuelphp.com
  */
 
@@ -66,12 +66,6 @@ class Session
 		{
 			// create the default instance if required
 			static::$_instance = static::forge();
-
-			// and start it if it wasn't auto-started
-			if ( ! \Config::get('session.auto_start', true))
-			{
-				static::$_instance->start();
-			}
 		}
 
 		if (\Config::get('session.native_emulation', false))
@@ -183,7 +177,7 @@ class Session
 			static::$_instances[$cookie] =& $driver;
 
 			// start the session if needed
-			if (\Config::get('session.auto_start', true))
+			if (\Arr::get($config, 'session.auto_start', true))
 			{
 				$driver->start();
 			}
@@ -207,7 +201,7 @@ class Session
 	/**
 	 * create or return the driver instance
 	 *
-	 * @param	void
+	 * @param	string|null name of the instance
 	 * @return	\Session_Driver object
 	 */
 	public static function instance($instance = null)
@@ -226,6 +220,48 @@ class Session
 
 		// return the default instance
 		return static::forge();
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * check if the given session instance is loaded and active
+	 *
+	 * @param	string|null name of the instance
+	 * @return	bool
+	 */
+	public static function active($instance = null)
+	{
+		// if no named instance is requested
+		if ($instance === null)
+		{
+			// find the default instance
+			$config = \Config::get('session', array());
+
+			// When a string was passed it's just the driver type
+			$config = array_merge(static::$_defaults, $config);
+
+			if (empty($config['driver']))
+			{
+				throw new \Session_Exception('No session driver given or no default session driver set.');
+			}
+
+			// determine the driver to load
+			$class = '\\Session_'.ucfirst($config['driver']);
+
+			$driver = new $class($config);
+
+			// get the driver's cookie name
+			$instance = $driver->get_config('cookie_name');
+		}
+
+		// not active if it doesn't exist
+		if ( ! array_key_exists($instance, static::$_instances))
+		{
+			return false;
+		}
+
+		return static::$_instances[$instance]->get_state() != 'init';
 	}
 
 	// --------------------------------------------------------------------

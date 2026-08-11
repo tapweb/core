@@ -6,7 +6,7 @@
  * @version    1.9-dev
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010-2025 Fuel Development Team
+ * @copyright  2010-2026 Fuel Development Team
  * @link       https://fuelphp.com
  */
 
@@ -188,7 +188,7 @@ class Route
 			if ($uri != '')
 			{
 				// strip the extension if needed and there is something to strip
-				if ($this->strip_extension and strrchr($uri, '.') == $ext = '.'.\Input::extension())
+				if (\Input::extension() and $this->strip_extension and strrchr($uri, '.') == $ext = '.'.\Input::extension())
 				{
 					if ($this->strip_extension === true or (is_array($this->strip_extension) and in_array($ext, $this->strip_extension)))
 					{

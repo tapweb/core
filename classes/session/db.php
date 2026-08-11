@@ -6,7 +6,7 @@
  * @version    1.9-dev
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010-2025 Fuel Development Team
+ * @copyright  2010-2026 Fuel Development Team
  * @link       https://fuelphp.com
  */
 
@@ -253,10 +253,13 @@ class Session_Db extends \Session_Driver
 			{
 				// strip the actual query from the message
 				$msg = $e->getMessage();
-				$msg = substr($msg, 0, strlen($msg)  - strlen(strrchr($msg, ':')));
+				if ($e->getDbCode())
+				{
+					$msg = substr($msg, 0, strlen($msg)  - strlen(strrchr($msg, ':')));
+				}
 
 				// and rethrow it
-				throw new \Database_Exception($msg, $e->getCode(), $e, $e->GetDbCode());
+				throw new \Database_Exception($msg, $e->getCode(), $e, $e->getDbCode());
 			}
 		}
 
