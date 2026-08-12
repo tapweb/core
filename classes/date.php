@@ -6,7 +6,7 @@
  * @version    1.9-dev
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010-2025 Fuel Development Team
+ * @copyright  2010-2026 Fuel Development Team
  * @link       https://fuelphp.com
  */
 
@@ -687,6 +687,12 @@ class Date
 		is_null($timestamp) and $timestamp = time() + static::$server_gmt_offset;
 		is_null($timezone) and $timezone = \Fuel::$timezone;
 		is_null($pattern) and $pattern = 'local';
+
+		// if timestamp is a DateTime object, convert it to a timestamp
+		if ($timestamp instanceOf \DateTime)
+		{
+			$timestamp = $timestamp->getTimestamp();
+		}
 
 		$this->timestamp = $timestamp;
 		$this->set_timezone($timezone);

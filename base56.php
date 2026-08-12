@@ -6,7 +6,7 @@
  * @version    1.9-dev
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010-2025 Fuel Development Team
+ * @copyright  2010-2026 Fuel Development Team
  * @link       https://fuelphp.com
  */
 
@@ -52,13 +52,14 @@ if ( ! function_exists('call_fuel_func_array'))
 			is_string($callback) and $callback = ltrim($callback, '\\');
 		}
 
-        // TODO refactor
-        // convert null to empty string if callback function in deprecated functions parameters
-        if (is_string($callback) && in_array($callback, ['trim'])) {
-            $args = array_map(function ($item) {
-                return $item ?? '';
-            }, $args);
-        }
+		// convert null to an empty string for native callbacks that deprecate null
+		if (is_string($callback) and in_array($callback, array('trim'), true))
+		{
+			$args = array_map(function ($item)
+			{
+				return $item ?? '';
+			}, $args);
+		}
 
 		return $callback(...$args);
 	}

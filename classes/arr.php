@@ -6,7 +6,7 @@
  * @version    1.9-dev
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010-2025 Fuel Development Team
+ * @copyright  2010-2026 Fuel Development Team
  * @link       https://fuelphp.com
  */
 
@@ -337,10 +337,11 @@ class Arr
 	/**
 	 * Checks if the given array is an assoc array.
 	 *
-	 * @param   array  $arr  the array to check
+	 * @param   array  $arr      the array to check
+	 * @param   bool   $sequential  if true, require an indexed array to have sequential keys
 	 * @return  bool   true if its an assoc array, false if not
 	 */
-	public static function is_assoc($arr)
+	public static function is_assoc($arr, $sequential = true)
 	{
 		if ( ! is_array($arr))
 		{
@@ -348,9 +349,9 @@ class Arr
 		}
 
 		$counter = 0;
-		foreach ($arr as $key => $unused)
+		foreach (array_keys($arr) as $key)
 		{
-			if ( ! is_int($key) or $key !== $counter++)
+			if ( ! is_int($key) or ($sequential and $key !== $counter++))
 			{
 				return true;
 			}
@@ -777,12 +778,19 @@ class Arr
 	 * @param   array  $array        collection of arrays/objects to sort
 	 * @param   array  $conditions   sorting conditions
 	 * @param   bool   $ignore_case  whether to sort case insensitive
+	 * @param   bool   $reindex      for indexed arrays, reindex ( = default multisprt behaviour) or not
 	 * @return  array
 	 */
-	public static function multisort($array, $conditions, $ignore_case = false)
+	public static function multisort($array, $conditions, $ignore_case = false, $reindex = true)
 	{
 		$temp = array();
 		$keys = array_keys($conditions);
+
+		// only relevant for indexed arrays
+		if ($reindex)
+		{
+			$reindex = ! static::is_assoc($array, false);
+		}
 
 		foreach($keys as $key)
 		{
@@ -802,7 +810,19 @@ class Arr
 
 		$args[] = &$array;
 
+		if ( ! $reindex)
+		{
+			$keys = array_keys($array);
+			$args[] = &$keys;
+		}
+
 		call_fuel_func_array('array_multisort', $args);
+
+		if ( ! $reindex)
+		{
+			$array = array_combine($keys, $array);
+		}
+
 		return $array;
 	}
 

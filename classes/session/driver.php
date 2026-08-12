@@ -6,7 +6,7 @@
  * @version    1.9-dev
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010-2025 Fuel Development Team
+ * @copyright  2010-2026 Fuel Development Team
  * @link       https://fuelphp.com
  */
 
@@ -435,6 +435,16 @@ abstract class Session_Driver
 		}
 
 		return $this;
+	}
+
+	// --------------------------------------------------------------------
+
+	/**
+	 * return the current state of this session driver
+	 */
+	public function get_state()
+	{
+		return $this->state;
 	}
 
 	// --------------------------------------------------------------------
