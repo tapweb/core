@@ -151,7 +151,8 @@ if ( ! function_exists('html_tag'))
 		else
 		{
 			// add the content and close the tag
-			$html .= '>'.(empty($content) ? '' : $content).'</'.$tag.'>';
+			// no empty() check: it would drop a content of "0"
+			$html .= '>'.$content.'</'.$tag.'>';
 		}
 
 		return $html;
