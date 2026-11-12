@@ -6,7 +6,7 @@
  * @version    1.9-dev
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010-2025 Fuel Development Team
+ * @copyright  2010-2026 Fuel Development Team
  * @link       https://fuelphp.com
  */
 
@@ -130,7 +130,12 @@ class Lang_Php extends \Lang_File
 <?php
 
 CONF;
+		// initial code
 		$output .= 'return '.str_replace(array('  ', 'array (', '\''.APPPATH, '\''.DOCROOT, '\''.COREPATH, '\''.PKGPATH), array("\t", 'array(', 'APPPATH.\'', 'DOCROOT.\'', 'COREPATH.\'', 'PKGPATH.\''), var_export($contents, true)).";\n";
+
+		// fuel standards
+		$output = preg_replace('/=>\s+array\(/', '=> array(', $output);
+
 		return $output;
 	}
 }

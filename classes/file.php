@@ -6,7 +6,7 @@
  * @version    1.9-dev
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010-2025 Fuel Development Team
+ * @copyright  2010-2026 Fuel Development Team
  * @link       https://fuelphp.com
  */
 
@@ -42,7 +42,7 @@ class File
 		$chmod = \Config::get('file.chmod.files', 0666);
 		is_string($chmod) and \Config::set('file.chmod.files', octdec($chmod));
 
-		static::$areas[null] = \File_Area::forge(\Config::get('file.base_config', array()));
+		static::$areas[''] = \File_Area::forge(\Config::get('file.base_config', array()));
 
 		foreach (\Config::get('file.areas', array()) as $name => $config)
 		{
@@ -66,6 +66,11 @@ class File
 		if ($area instanceof File_Area)
 		{
 			return $area;
+		}
+
+		if (is_null($area))
+		{
+			$area = '';
 		}
 
 		$instance = array_key_exists($area, static::$areas) ? static::$areas[$area] : false;
@@ -151,6 +156,7 @@ class File
 		}
 
 		$file = static::open_file(@fopen($new_file, 'c'), true, $area);
+		ftruncate($file, 0);
 		fwrite($file, $contents);
 		static::close_file($file, $area);
 
@@ -223,7 +229,7 @@ class File
 					// if we get something else then a chmod error, bail out
 					if (substr($e->getMessage(), 0, 8) !== 'chmod():')
 					{
-						throw new $e;
+						throw $e;
 					}
 				}
 			}
@@ -564,7 +570,7 @@ class File
 				// if we get something else then a chmod error, bail out
 				if (strpos($e->getMessage(), 'Operation not permitted') === false)
 				{
-					throw new $e;
+					throw $e;
 				}
 
 				// finish the rename after ignoring the chmod error
@@ -584,7 +590,7 @@ class File
 						// if we get something else then a chmod error, bail out
 						if (substr($e->getMessage(), 0, 8) !== 'chmod():')
 						{
-							throw new $e;
+							throw $e;
 						}
 					}
 				}
@@ -695,7 +701,7 @@ class File
 				// if we get something else then a chmod error, bail out
 				if (substr($e->getMessage(), 0, 8) !== 'chmod():')
 				{
-					throw new $e;
+					throw $e;
 				}
 			}
 		}

@@ -6,7 +6,7 @@
  * @version    1.9-dev
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010-2025 Fuel Development Team
+ * @copyright  2010-2026 Fuel Development Team
  * @link       https://fuelphp.com
  */
 
@@ -26,7 +26,6 @@ class Image_Gd extends \Image_Driver
 
 		if ( ! $return_data)
 		{
-			$this->image_data !== null and imagedestroy($this->image_data);
 			$this->image_data = null;
 		}
 

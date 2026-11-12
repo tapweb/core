@@ -6,7 +6,7 @@
  * @version    1.9-dev
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010-2025 Fuel Development Team
+ * @copyright  2010-2026 Fuel Development Team
  * @link       https://fuelphp.com
  */
 
@@ -165,8 +165,8 @@ class Lang
 	{
 		($language === null) and $language = static::get_lang();
 
-		// prefix the file with the language
-		if ( ! is_null($language))
+		// if file is not an FQFN, prefix the file with the language
+		if ($file[0] != '/' and substr($file, 1, 2) != ':\\' and ! is_null($language))
 		{
 			$file = explode('::', $file);
 			end($file);

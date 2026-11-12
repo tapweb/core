@@ -6,7 +6,7 @@
  * @version    1.9-dev
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010-2025 Fuel Development Team
+ * @copyright  2010-2026 Fuel Development Team
  * @copyright  2008 - 2009 Kohana Team
  * @link       https://fuelphp.com
  */
@@ -15,6 +15,23 @@ namespace Fuel\Core;
 
 class Database_SQLite_Connection extends \Database_PDO_Connection
 {
+	/**
+	 * Stores the database configuration locally and name the instance.
+	 *
+	 * [!!] This method cannot be accessed directly, you must use [static::instance].
+	 *
+	 * @param string $name
+	 * @param array  $config
+	 */
+	protected function __construct($name, array $config)
+	{
+		// MySQL schema processor
+		$this->_schema = new \Database_SQLite_Schema($name, $this);
+
+		// finish constructing the object
+		parent::__construct($name, $config);
+	}
+
 	/**
 	 * Create a new [Database_Query_Builder_Update].
 	 *

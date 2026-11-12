@@ -6,7 +6,7 @@
  * @version    1.9-dev
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010-2025 Fuel Development Team
+ * @copyright  2010-2026 Fuel Development Team
  * @link       https://fuelphp.com
  */
 
@@ -369,6 +369,24 @@ class DBUtil
 	public static function repair_table($table, $db = null)
 	{
 		return static::table_maintenance('REPAIR TABLE', $table, $db);
+	}
+
+	/**
+	 * Checks if a given database exists.
+	 *
+	 * @throws  \Database_Exception
+	 * @param   string  $table  Table name
+	 * @param   string  $db     the database connection to use
+	 * @return  bool
+	 */
+	public static function database_exists($database, $db = null)
+	{
+		return \Database_Connection::instance($db ? $db : static::$connection)->schema(
+			'database_exists',
+			array(
+				$database,
+			)
+		);
 	}
 
 	/**

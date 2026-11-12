@@ -367,7 +367,7 @@ $output['configItems'] = $printarray(\Config::$items, 0, $class, $configCount);
 
 $class = '';
 $sessionCount = 0;
-$output['sessionItems'] = $printarray(\Session::get(null), 0, $class, $sessionCount);
+$output['sessionItems'] = $printarray(\Session::active() ? \Session::get(null) : array(), 0, $class, $sessionCount);
 
 $class = '';
 $getCount = 0;

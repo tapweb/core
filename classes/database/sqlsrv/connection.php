@@ -7,7 +7,7 @@
  * @author     Fuel Development Team
  * @author     cocteau666@gmail.com
  * @license    MIT License
- * @copyright  2010-2025 Fuel Development Team
+ * @copyright  2010-2026 Fuel Development Team
  * @copyright  2008 - 2009 Kohana Team
  * @link       https://fuelphp.com
  */
@@ -26,6 +26,9 @@ class Database_Sqlsrv_Connection extends \Database_PDO_Connection
 	 */
 	protected function __construct($name, array $config)
 	{
+		// MySQL schema processor
+		$this->_schema = new \Database_Sqlsrv_Schema($name, $this);
+
 		parent::__construct($name, $config);
 	}
 
@@ -161,25 +164,53 @@ class Database_Sqlsrv_Connection extends \Database_PDO_Connection
 	 */
 	public function set_charset($charset)
 	{
-		if ($charset == 'utf8' or $charset = 'utf-8')
+		if ($charset == 'utf8' or $charset == 'utf-8')
 		{
 			// use utf8 encoding
-			$this->_connection->setAttribute(\PDO::SQLSRV_ATTR_ENCODING, \PDO::SQLSRV_ENCODING_UTF8);
+			if (PHP_VERSION_ID < 80500)
+			{
+				$this->_connection->setAttribute(\PDO::SQLSRV_ATTR_ENCODING, \PDO::SQLSRV_ENCODING_UTF8);
+			}
+			else
+			{
+				$this->_connection->setAttribute(\PDO\Sqlsrv::ATTR_ENCODING, \PDO\Sqlsrv::ENCODING_UTF8);
+			}
 		}
 		elseif ($charset == 'system')
 		{
 			// use system encoding
-			$this->_connection->setAttribute(\PDO::SQLSRV_ATTR_ENCODING, \PDO::SQLSRV_ENCODING_SYSTEM);
+			if (PHP_VERSION_ID < 80500)
+			{
+				$this->_connection->setAttribute(\PDO::SQLSRV_ATTR_ENCODING, \PDO::SQLSRV_ENCODING_SYSTEM);
+			}
+			else
+			{
+				$this->_connection->setAttribute(\PDO\Sqlsrv::ATTR_ENCODING, \PDO\Sqlsrv::ENCODING_SYSTEM);
+			}
 		}
 		elseif (is_numeric($charset))
 		{
 			// charset code passed directly
-			$this->_connection->setAttribute(\PDO::SQLSRV_ATTR_ENCODING, $charset);
+			if (PHP_VERSION_ID < 80500)
+			{
+				$this->_connection->setAttribute(\PDO::SQLSRV_ATTR_ENCODING, $charset);
+			}
+			else
+			{
+				$this->_connection->setAttribute(\PDO\Sqlsrv::ATTR_ENCODING, $charset);
+			}
 		}
 		else
 		{
 			// unknown charset, use the default encoding
-			$this->_connection->setAttribute(\PDO::SQLSRV_ATTR_ENCODING, \PDO::SQLSRV_ENCODING_DEFAULT);
+			if (PHP_VERSION_ID < 80500)
+			{
+				$this->_connection->setAttribute(\PDO::SQLSRV_ATTR_ENCODING, \PDO::SQLSRV_ENCODING_DEFAULT);
+			}
+			else
+			{
+				$this->_connection->setAttribute(\PDO\Sqlsrv::ATTR_ENCODING, \PDO\Sqlsrv::ENCODING_DEFAULT);
+			}
 		}
 	}
 

@@ -7,7 +7,7 @@
  * @author     Fuel Development Team
  * @author     cocteau666@gmail.com
  * @license    MIT License
- * @copyright  2010-2025 Fuel Development Team
+ * @copyright  2010-2026 Fuel Development Team
  * @copyright  2008 - 2009 Kohana Team
  * @link       https://fuelphp.com
  */
@@ -31,6 +31,9 @@ class Database_Dblib_Connection extends \Database_PDO_Connection
 		{
 			throw new \Database_Exception('The "Dblib" database driver does not work well on Windows. Use the "Sqlsrv" driver instead.');
 		}
+
+		// MySQL Dblib processor
+		$this->_schema = new \Database_Dblib_Schema($name, $this);
 
 		parent::__construct($name, $config);
 	}

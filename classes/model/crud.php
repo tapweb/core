@@ -6,7 +6,7 @@
  * @version    1.9-dev
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010-2025 Fuel Development Team
+ * @copyright  2010-2026 Fuel Development Team
  * @link       https://fuelphp.com
  */
 
@@ -993,7 +993,7 @@ class Model_Crud extends \Model implements \Iterator, \ArrayAccess, \Serializabl
 
 	public function unserialize($data)
 	{
-		$data = unserialize(implode(" ", $data ?? []));
+		$data = unserialize(implode(" ", $data ?? array()));
 		if (isset($data['_is_new']))
 		{
 			$this->is_new = $data['_is_new'];

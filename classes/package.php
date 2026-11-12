@@ -6,7 +6,7 @@
  * @version    1.9-dev
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010-2025 Fuel Development Team
+ * @copyright  2010-2026 Fuel Development Team
  * @link       https://fuelphp.com
  */
 
@@ -135,6 +135,44 @@ class Package
 		$package = ucfirst($package);
 
 		return array_key_exists($package, static::$packages);
+	}
+
+	/**
+	 * Checks if the given package is installed, if no package is given then
+	 * all installed packages are returned.
+	 *
+	 * @param   string|null  $package  The package name or null
+	 * @return  bool|array  Whether the package is loaded, or all package
+	 */
+	public static function installed($package = null)
+	{
+		// storage for installed packages
+		static $packages;
+
+		// enumerate the packages on first call
+		if (is_null($packages))
+		{
+			// loop through package paths
+			foreach (\Config::get('package_paths', array(PKGPATH)) as $path)
+			{
+				// get all packages installed in this path
+				foreach(new \GlobIterator(realpath($path).DS.'*') as $p)
+				{
+					$packages[] = $p->getBasename();
+				}
+			}
+		}
+
+		// return all packages if none is given
+		if ($package === null)
+		{
+			return $packages;
+		}
+
+		// unify the name
+		$package = strtolower($package);
+
+		return array_key_exists($package, $packages);
 	}
 
 	/**

@@ -6,13 +6,13 @@
  * @version    1.9-dev
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010-2025 Fuel Development Team
+ * @copyright  2010-2026 Fuel Development Team
  * @link       https://fuelphp.com
  */
 
 namespace Fuel\Core;
 
-class Database_Schema
+abstract class Database_Schema
 {
 	/**
 	 * @var  Database_Connection  database connection instance
@@ -158,6 +158,15 @@ class Database_Schema
 
 		return $this->_connection->query(\DB::DELETE, $sql, false);
 	}
+
+	/**
+	 * Generic check if a given database exists.
+	 *
+	 * @throws  \Database_Exception
+	 * @param   string  $table  Table name
+	 * @return  bool
+	 */
+	abstract public function database_exists($database);
 
 	/**
 	 * Generic check if a given table exists.
@@ -600,7 +609,7 @@ class Database_Schema
 				}
 			}
 
-			$sql .= array_key_exists('CHARSET', $attr) ? $this->process_charset($attr['CHARSET'], false) : '';
+			$sql .= array_key_exists('CHARSET', $attr) ? $this->process_charset($attr['CHARSET'], false, array_key_exists('COLLATE', $attr) ? $attr['COLLATE'] : null) : '';
 
 			if (array_key_exists('UNSIGNED', $attr) and $attr['UNSIGNED'] === true)
 			{

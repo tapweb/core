@@ -6,7 +6,7 @@
  * @version    1.9-dev
  * @author     Fuel Development Team
  * @license    MIT License
- * @copyright  2010-2025 Fuel Development Team
+ * @copyright  2010-2026 Fuel Development Team
  * @link       https://fuelphp.com
  */
 
@@ -360,7 +360,7 @@ class View
 	 *
 	 *     View::set_global($name, $value);
 	 *
-	 * @param   string  $key     variable name or an array of variables
+	 * @param   string|array  $key     variable name or an array of variables
 	 * @param   mixed   $value   value
 	 * @param   bool    $filter  whether to filter the data or not
 	 * @return  void
@@ -565,7 +565,7 @@ class View
 	 *     // Create the values $food and $beverage in the view
 	 *     $view->set(array('food' => 'bread', 'beverage' => 'water'));
 	 *
-	 * @param   string   $key     variable name or an array of variables
+	 * @param   string|array   $key     variable name or an array of variables
 	 * @param   mixed    $value   value
 	 * @param   bool     $filter  whether to filter the data or not
 	 * @return  $this
